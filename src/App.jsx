@@ -9,6 +9,7 @@ const DB_MESSAGES_KEY = "messages";
 
 function App() {
   const [messages, setMessages] = useState([]);
+  const [textInputValue, setTextInputValue] = useState("");
 
   useEffect(() => {
     const messagesRef = ref(database, DB_MESSAGES_KEY);
@@ -22,10 +23,12 @@ function App() {
     });
   }, []);
 
-  const writeData = () => {
+  const writeData = (e) => {
+    e.preventDefault();
     const messageListRef = ref(database, DB_MESSAGES_KEY);
     const newMessageRef = push(messageListRef);
-    set(newMessageRef, "abc");
+    set(newMessageRef, textInputValue);
+    setTextInputValue("");
   };
 
   // Convert messages in state to message JSX elements to render
@@ -41,7 +44,19 @@ function App() {
       <h1>Instagram Bootcamp</h1>
       <div className="card">
         {/* TODO: Add input field and add text input as messages in Firebase */}
-        <button onClick={writeData}>Send</button>
+        <form onSubmit={writeData}>
+          <input
+            type="text"
+            value={textInputValue}
+            onChange={(e) => setTextInputValue(e.target.value)}
+          />
+          <input
+            type="submit"
+            value="Send"
+            // Disable Send button when text input is empty
+            disabled={!textInputValue}
+          />
+        </form>
         <ol>{messageListItems}</ol>
       </div>
     </>
