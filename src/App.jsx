@@ -62,7 +62,7 @@ function App() {
 
   // Convert messages in state to message JSX elements to render
   let postListItems = posts.map((post) => (
-    <Card bg="dark" text="white" key={post.key}>
+    <Card className="m-3" bg="secondary" text="white" key={post.key}>
       <Card.Img src={post.val.imageLink} className="Card-Img" />
       <Card.Text>{post.val.text}</Card.Text>
     </Card>
@@ -72,11 +72,11 @@ function App() {
 
   return (
     <>
-      <div>
+      <div className="bg-muted">
         <img src={logo} className="logo" alt="Rocket logo" />
       </div>
-      <h1>Instagram Bootcamp</h1>
       <div className="card">
+        <h1 className="text-white">Instagram Bootcamp</h1>
         <form onSubmit={writeData}>
           <input
             type="file"
