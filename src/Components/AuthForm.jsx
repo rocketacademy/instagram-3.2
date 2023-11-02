@@ -5,13 +5,16 @@ import {
 } from "firebase/auth";
 import { useState } from "react";
 import { auth } from "../firebase";
+import { useNavigate } from "react-router-dom";
 
-const AuthForm = (props) => {
+const AuthForm = () => {
   const [emailInputValue, setEmailInputValue] = useState("");
   const [passwordInputValue, setPasswordInputValue] = useState("");
   const [isNewUser, setIsNewUser] = useState(true);
   const [errorCode, setErrorCode] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+
+  const navigate = useNavigate();
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -23,8 +26,8 @@ const AuthForm = (props) => {
       setIsNewUser(true);
       setErrorCode("");
       setErrorMessage("");
-      // Toggle auth form off after authentication
-      props.toggleAuthForm();
+      // Navigate back to news feed
+      navigate("/");
     };
 
     const setErrorState = (error) => {

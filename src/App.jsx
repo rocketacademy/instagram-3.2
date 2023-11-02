@@ -6,10 +6,17 @@ import Composer from "./Components/Composer";
 import NewsFeed from "./Components/NewsFeed";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "./firebase";
+import {
+  createBrowserRouter,
+  createRoutesFromElements,
+  Link,
+  Route,
+  RouterProvider,
+  Outlet,
+} from "react-router-dom";
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
-  const [shouldRenderAuthForm, setShouldRenderAuthForm] = useState(false);
 
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
@@ -22,12 +29,6 @@ function App() {
       setLoggedInUser(null);
     });
   });
-
-  const toggleAuthForm = () => {
-    setShouldRenderAuthForm((prevState) => !prevState);
-  };
-
-  const authForm = <AuthForm toggleAuthForm={toggleAuthForm} />;
   const composer = (
     <div>
       <button
@@ -42,20 +43,29 @@ function App() {
       <Composer loggedInUser={loggedInUser} />
     </div>
   );
+  const authForm = <AuthForm />;
   const createAccountOrSignInButton = (
     <div>
-      <button onClick={toggleAuthForm}>Create Account Or Sign In</button>
+      <Link to="authform">Create Account Or Sign In</Link>
       <br />
     </div>
   );
   const composerAndNewsFeed = (
     <div>
       {/* Render composer if user logged in, else render auth button */}
-
+      <Outlet />
       {loggedInUser ? composer : createAccountOrSignInButton}
       <br />
       <NewsFeed />
     </div>
+  );
+
+  const router = createBrowserRouter(
+    createRoutesFromElements(
+      <Route path="/" element={composerAndNewsFeed}>
+        <Route path="authform" element={authForm} />
+      </Route>
+    )
   );
 
   return (
@@ -64,7 +74,7 @@ function App() {
         <img src={logo} className="logo" alt="Rocket logo" />
       </div>
       <div className="card">
-        {shouldRenderAuthForm ? authForm : composerAndNewsFeed}
+        <RouterProvider router={router} />
       </div>
     </>
   );
