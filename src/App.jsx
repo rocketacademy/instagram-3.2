@@ -1,74 +1,62 @@
 import logo from "/logo.png";
 import "./App.css";
-import { onChildAdded, push, ref as databaseRef, set } from "firebase/database";
-import {
-  getDownloadURL,
-  ref as storageRef,
-  uploadBytes,
-} from "firebase/storage";
-import Card from "react-bootstrap/Card";
-import { database, storage } from "./firebase";
 import { useState, useEffect } from "react";
-
-// Save Firebase folder names as constants to avoid bugs due to misspelling
-const IMAGES_FOLDER_NAME = "images";
-const POSTS_FOLDER_NAME = "posts";
-// Note is has moved from "messages"
+import AuthForm from "./Components/AuthForm";
+import Composer from "./Components/Composer";
+import NewsFeed from "./Components/NewsFeed";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "./firebase";
 
 function App() {
-  const [posts, setPosts] = useState([]);
-  const [textInputValue, setTextInputValue] = useState("");
-  const [fileInputFile, setFileInputFile] = useState(null);
-  const [fileInputValue, setFileInputValue] = useState("");
+  const [loggedInUser, setLoggedInUser] = useState(null);
+  const [shouldRenderAuthForm, setShouldRenderAuthForm] = useState(false);
 
   useEffect(() => {
-    const messagesRef = databaseRef(database, POSTS_FOLDER_NAME);
-    // onChildAdded will return data for every child at the reference and every subsequent new child
-    onChildAdded(messagesRef, (data) => {
-      // Add the subsequent child to local component state, initialising a new array to trigger re-render
-      setPosts((prevState) =>
-        // Store message key so we can use it as a key in our list items when rendering messages
-        [...prevState, { key: data.key, val: data.val() }]
-      );
+    onAuthStateChanged(auth, (user) => {
+      // If user is logged in, save logged-in user to state
+      if (user) {
+        setLoggedInUser(user);
+        return;
+      }
+      // Else set logged-in user in state to null
+      setLoggedInUser(null);
     });
-  }, []);
+  });
 
-  const writeData = (e) => {
-    // Prevent default form submit behaviour that will reload the page
-    e.preventDefault();
-
-    // Store images in an images folder in Firebase Storage
-    const fileRef = storageRef(
-      storage,
-      `${IMAGES_FOLDER_NAME}/${fileInputFile.name}`
-    );
-
-    // Upload file, save file download URL in database with post text
-    uploadBytes(fileRef, fileInputFile).then(() => {
-      getDownloadURL(fileRef).then((downloadUrl) => {
-        const postListRef = databaseRef(database, POSTS_FOLDER_NAME);
-        const newPostRef = push(postListRef);
-        set(newPostRef, {
-          imageLink: downloadUrl,
-          text: textInputValue,
-        });
-        // Reset input field after submit
-        setTextInputValue("");
-        setFileInputFile("");
-        setFileInputValue(null);
-      });
-    });
+  const toggleAuthForm = () => {
+    setShouldRenderAuthForm((prevState) => !prevState);
   };
 
-  // Convert messages in state to message JSX elements to render
-  let postListItems = posts.map((post) => (
-    <Card className="m-3" bg="secondary" text="white" key={post.key}>
-      <Card.Img src={post.val.imageLink} className="Card-Img" />
-      <Card.Text>{post.val.text}</Card.Text>
-    </Card>
-  ));
-  // Reverse the order of posts such that newest posts are on top
-  postListItems.reverse();
+  const authForm = <AuthForm toggleAuthForm={toggleAuthForm} />;
+  const composer = (
+    <div>
+      <button
+        onClick={() =>
+          signOut(auth).then(() => {
+            console.log("signed out");
+          })
+        }
+      >
+        Logout
+      </button>
+      <Composer loggedInUser={loggedInUser} />
+    </div>
+  );
+  const createAccountOrSignInButton = (
+    <div>
+      <button onClick={toggleAuthForm}>Create Account Or Sign In</button>
+      <br />
+    </div>
+  );
+  const composerAndNewsFeed = (
+    <div>
+      {/* Render composer if user logged in, else render auth button */}
+
+      {loggedInUser ? composer : createAccountOrSignInButton}
+      <br />
+      <NewsFeed />
+    </div>
+  );
 
   return (
     <>
@@ -76,30 +64,7 @@ function App() {
         <img src={logo} className="logo" alt="Rocket logo" />
       </div>
       <div className="card">
-        <h1 className="text-white">Instagram Bootcamp</h1>
-        <form onSubmit={writeData}>
-          <input
-            type="file"
-            value={fileInputValue}
-            onChange={(e) => {
-              setFileInputFile(e.target.files[0]);
-              setFileInputValue(e.target.value);
-            }}
-          />
-          <br />
-          <input
-            type="text"
-            value={textInputValue}
-            onChange={(e) => setTextInputValue(e.target.value)}
-          />
-          <input
-            type="submit"
-            value="Send"
-            // Disable Send button when text input is empty
-            disabled={!textInputValue}
-          />
-        </form>
-        <ol>{postListItems}</ol>
+        {shouldRenderAuthForm ? authForm : composerAndNewsFeed}
       </div>
     </>
   );
