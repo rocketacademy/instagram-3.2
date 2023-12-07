@@ -53,14 +53,14 @@
 }
 
 .text-messages {
-  font-size: 1.2em;
+  font-size: 1.25em;
   font-weight: 420;
 }
 
 .timestamp {
   font-family: "JetBrains Mono", monospace;
   font-weight: 300;
-  font-size: 0.8125em;
+  font-size: 0.75em;
   letter-spacing: 0.075em;
   font-feature-settings: "cv18", "zero";
 }

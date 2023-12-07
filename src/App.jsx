@@ -1,6 +1,6 @@
 import logo from "/logo.png";
 import "./App.css";
-import { onChildAdded, push, ref, set, onValue } from "firebase/database";
+import { onChildAdded, push, ref, set } from "firebase/database";
 import { database } from "./firebase";
 import { useState, useEffect } from "react";
 
@@ -33,11 +33,11 @@ export default function App() {
   const messageListItems = messages.map((message) => {
     return (
       <li key={message.key}>
+        <span className="text-messages">{message.val.Message}</span>
+        <br />
         <span className="timestamp">
           {new Date(message.val.Timestamp).toLocaleString()}
         </span>
-        <br />
-        <span className="text-messages">{message.val.Message}</span>
       </li>
     );
   });
