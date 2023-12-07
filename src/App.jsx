@@ -30,13 +30,14 @@ export default function App() {
   };
 
   // Convert messages in state to message JSX elements to render
-  let messageListItems = messages.map((message) => {
+  const messageListItems = messages.map((message) => {
     return (
       <li key={message.key}>
-        {new Date(message.val.Timestamp).toLocaleString()}
+        <span className="timestamp">
+          {new Date(message.val.Timestamp).toLocaleString()}
+        </span>
         <br />
-        Message: {message.val.Message}
-        <br />
+        <span className="text-messages">{message.val.Message}</span>
       </li>
     );
   });
@@ -56,7 +57,7 @@ export default function App() {
           />{" "}
           <button onClick={writeData}>Send</button>
         </form>
-        <ol>{messageListItems}</ol>
+        <ul className="message-box">{messageListItems}</ul>
       </div>
     </>
   );
