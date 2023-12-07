@@ -1,6 +1,6 @@
 import logo from "/logo.png";
 import "./App.css";
-import { onChildAdded, push, ref, set } from "firebase/database";
+import { onChildAdded, onChildChanged, update, push, ref, set} from "firebase/database";
 import { database } from "./firebase";
 import { useState, useEffect } from "react";
 
@@ -9,28 +9,74 @@ const DB_MESSAGES_KEY = "messages";
 
 function App() {
   const [messages, setMessages] = useState([]);
+  const [textInput, setTextInput] = useState("")
+  const [nameInput, setNameInput] = useState("")
+  const [editing, setEditing] = useState(false);
+  const [editingData, setEditingData] = useState({});
+  const [deleting, setDeleting] = useState(false);
+  const [deletingData, setDeletingData] = useState({});
+  const messagesRef = ref(database, DB_MESSAGES_KEY);
 
   useEffect(() => {
-    const messagesRef = ref(database, DB_MESSAGES_KEY);
-    // onChildAdded will return data for every child at the reference and every subsequent new child
     onChildAdded(messagesRef, (data) => {
-      // Add the subsequent child to local component state, initialising a new array to trigger re-render
       setMessages((prevState) =>
-        // Store message key so we can use it as a key in our list items when rendering messages
         [...prevState, { key: data.key, val: data.val() }]
       );
     });
   }, []);
 
+  useEffect(() => {
+    onChildChanged(messagesRef, (data) => {
+      const messagesArray = [...messages];
+      let isIndex = (element) => element.key == data.key;
+      const index = messagesArray.findIndex(isIndex);
+      messagesArray[index] = { key: data.key, val: data.val() };
+      setMessages(messagesArray);
+    });
+  }, [editing]);
+
   const writeData = () => {
-    const messageListRef = ref(database, DB_MESSAGES_KEY);
-    const newMessageRef = push(messageListRef);
-    set(newMessageRef, "abc");
+    const newMessageRef = push(messagesRef);
+    set(newMessageRef, {
+      text: textInput,
+      name: nameInput,
+      timeStamp: new Date().toLocaleString()
+    });
   };
 
-  // Convert messages in state to message JSX elements to render
+  const editData = (e) => {
+     e.preventDefault();
+     setEditing(false);
+
+     const updates = {};
+     updates[editingData.key] = {
+       text: textInput,
+       name: nameInput,
+       timeStamp: new Date().toLocaleString()
+     };
+
+     update(messagesRef, updates);
+     setTextInput("");
+     setEditingData({});
+     setNameInput("");
+  }
+
+  const startUpdate = (message) => {
+    setEditing(true);
+    setTextInput(message.val.text);
+    setNameInput(message.val.name);
+    setEditingData(message)
+  }
+
   let messageListItems = messages.map((message) => (
-    <li key={message.key}>{message.val}</li>
+    <div key={message.key} style={{ margin: "1rem" }}>
+      <div>
+        {message.val.name}: {message.val.text}
+      </div>
+      <div>{message.val.timeStamp}</div>
+      <button onClick={() => startUpdate(message)}>Edit</button>
+      <button onClick={() => startDelete(message)}>Delete</button>
+    </div>
   ));
 
   return (
@@ -39,10 +85,23 @@ function App() {
         <img src={logo} className="logo" alt="Rocket logo" />
       </div>
       <h1>Instagram Bootcamp</h1>
+
       <div className="card">
-        {/* TODO: Add input field and add text input as messages in Firebase */}
-        <button onClick={writeData}>Send</button>
-        <ol>{messageListItems}</ol>
+      <form onSubmit={editing? editData: writeData} className="form-container">
+        <label>Message: </label>
+        <input
+          type="text"
+          value={textInput}
+          onChange={(e) => setTextInput(e.target.value)}
+        />
+        <br></br>
+        <label>Name: </label>
+        <input type="text" value={nameInput} onChange={(e) => setNameInput(e.target.value)}/>
+        <br></br>
+        <input type="submit" value="submit" />
+      </form>
+      
+      <div style={{margin:"1rem"}}>{messageListItems}</div>
       </div>
     </>
   );
