@@ -1,6 +1,13 @@
 import logo from "/logo.png";
 import "./App.css";
-import { onChildAdded, push, ref, set } from "firebase/database";
+import {
+  onChildAdded,
+  push,
+  ref,
+  set,
+  remove,
+  onChildRemoved,
+} from "firebase/database";
 import { database } from "./firebase";
 import { useState, useEffect } from "react";
 
@@ -22,12 +29,17 @@ export default function App() {
         [...prev, { key: data.key, val: data.val() }]
       );
     });
+    onChildRemoved(messagesRef, () =>
+      setMessages((prev) => prev.toSpliced(-1, 1))
+    );
   }, []); // eslint-disable-line
 
   const writeData = () => {
     const newMessageRef = push(messagesRef);
     set(newMessageRef, { Timestamp: `${Date()}`, Message: inputMessage });
   };
+
+  const deleteData = () => remove(messagesRef);
 
   // Convert messages in state to message JSX elements to render
   const messageListItems = messages.map((message) => {
@@ -56,6 +68,7 @@ export default function App() {
             onChange={(e) => setInputMessage(e.target.value)}
           />{" "}
           <button onClick={writeData}>Send</button>
+          <button onClick={deleteData}>NUKE NUDES</button>
         </form>
         <ul className="message-box">{messageListItems}</ul>
       </div>
