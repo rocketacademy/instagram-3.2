@@ -4,14 +4,15 @@ import { getDatabase } from "firebase/database";
 
 // TODO: Replace with your app's Firebase project configuration
 const firebaseConfig = {
-  apiKey: "API_KEY",
-  authDomain: "PROJECT_ID.firebaseapp.com",
+  apiKey: import.meta.env.VITE_SOME_API_KEY,
+  authDomain: import.meta.env.VITE_SOME_AUTH_DOMAIN,
   // The value of `databaseURL` depends on the location of the database
-  databaseURL: "https://DATABASE_NAME.REGION.firebasedatabase.app",
-  projectId: "PROJECT_ID",
-  storageBucket: "PROJECT_ID.appspot.com",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID",
+  databaseURL:
+    "https://rocketgram-f18cd-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: import.meta.env.VITE_SOME_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_SOME_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_SOME_MESSAGE_SENDER_ID,
+  appId: import.meta.env.VITE_SOME_APP_ID,
 };
 
 // Initialize Firebase

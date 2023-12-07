@@ -9,6 +9,7 @@ const DB_MESSAGES_KEY = "messages";
 
 function App() {
   const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState([]);
 
   useEffect(() => {
     const messagesRef = ref(database, DB_MESSAGES_KEY);
@@ -25,7 +26,7 @@ function App() {
   const writeData = () => {
     const messageListRef = ref(database, DB_MESSAGES_KEY);
     const newMessageRef = push(messageListRef);
-    set(newMessageRef, "abc");
+    set(newMessageRef, newMessage);
   };
 
   // Convert messages in state to message JSX elements to render
@@ -40,7 +41,12 @@ function App() {
       </div>
       <h1>Instagram Bootcamp</h1>
       <div className="card">
-        {/* TODO: Add input field and add text input as messages in Firebase */}
+        <input
+          type="text"
+          onChange={(e) => {
+            setNewMessage(`${new Date()}, ${e.target.value}`);
+          }}
+        />
         <button onClick={writeData}>Send</button>
         <ol>{messageListItems}</ol>
       </div>
