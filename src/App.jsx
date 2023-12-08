@@ -3,11 +3,12 @@ import "./App.css";
 import { onChildAdded, push, ref, set } from "firebase/database";
 import { database } from "./firebase";
 import { useState, useEffect } from "react";
+import Card from "@mui/material/Card";
 
 // Save the Firebase message folder name as a constant to avoid bugs due to misspelling
 const DB_MESSAGES_KEY = "messages";
 //set date
-const DATE = new Date().toDateString();
+const DATE = new Date().toString();
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -45,11 +46,12 @@ function App() {
 
   // Convert messages in state to message JSX elements to render
   let messageListItems = messages.map((message) => (
-    <li key={message.key}>
-      <p>
-        {message.val.timestamp}: {message.val.text}
-      </p>
-    </li>
+    <Card variant="outlined">
+      <li key={message.key}>
+        <p>{message.val.timestamp}</p>
+        <p>{message.val.text}</p>
+      </li>
+    </Card>
   ));
 
   return (
@@ -67,6 +69,8 @@ function App() {
             Send
           </button>
         </form>
+      </div>
+      <div>
         <ol>{messageListItems}</ol>
       </div>
     </>
