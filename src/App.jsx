@@ -29,17 +29,17 @@ export default function App() {
         [...prev, { key: data.key, val: data.val() }]
       );
     });
-    onChildRemoved(messagesRef, () =>
-      setMessages((prev) => prev.toSpliced(-1, 1))
+    onChildRemoved(messagesRef, (data) =>
+      setMessages((prev) => prev.filter((item) => item.key !== data.key))
     );
   }, []); // eslint-disable-line
 
   const writeData = () => {
     const newMessageRef = push(messagesRef);
-    set(newMessageRef, { Timestamp: `${Date()}`, Message: inputMessage });
+    set(newMessageRef, { Timestamp: `${new Date()}`, Message: inputMessage });
   };
 
-  const deleteData = () => remove(messagesRef);
+  const deleteAll = () => remove(messagesRef);
 
   // Convert messages in state to message JSX elements to render
   const messageListItems = messages.map((message) => {
@@ -50,6 +50,12 @@ export default function App() {
         <span className="timestamp">
           {new Date(message.val.Timestamp).toLocaleString()}
         </span>
+        <button
+          onClick={() =>
+            remove(ref(database, DB_MESSAGES_KEY + "/" + message.key))
+          }>
+          Delete
+        </button>
       </li>
     );
   });
@@ -68,7 +74,7 @@ export default function App() {
             onChange={(e) => setInputMessage(e.target.value)}
           />{" "}
           <button onClick={writeData}>Send</button>
-          <button onClick={deleteData}>NUKE NUDES</button>
+          <button onClick={deleteAll}>NUKE</button>
         </form>
         <ul className="message-box">{messageListItems}</ul>
       </div>
