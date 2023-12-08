@@ -37,5 +37,8 @@
   padding: 2em;
 }
 
-.form-container {
+.left-align {
+  display: block;
+  text-align: left;
+  margin-bottom: 1rem;
 }
