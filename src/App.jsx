@@ -1,14 +1,11 @@
-import logo from "/logo.png";
 import "./App.css";
-import { onChildAdded, push, ref, set } from "firebase/database";
+import { onChildAdded, push, ref, set, remove } from "firebase/database";
 import { database } from "./firebase";
 import { useState, useEffect } from "react";
-import { Container } from "postcss";
 
 // Save the Firebase message folder name as a constant to avoid bugs due to misspelling
 const DB_MESSAGES_KEY = "messages";
 const currentDate = new Date().toString();
-console.log(currentDate);
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -37,10 +34,12 @@ function App() {
     setInputTextValue("");
   };
 
+  const deleteMessage = (messageKey) => {
+    const updatedMessageList = messages.filter((message) => message.key !== messageKey);
+    setMessages(updatedMessageList);
+    remove(ref(database, `${DB_MESSAGES_KEY}/${messageKey}`));
+  };
   // Convert messages in state to message JSX elements to render
-
-  //real time refreshing/shifting
-
   // let messageListItems = messages.reverse().map((message) => (
   //   <li key={message.key}>
   //     {message.val.Timestamp}-{message.val.Comment}
@@ -49,7 +48,7 @@ function App() {
 
   return (
     <>
-      <div className="bg-yellow-200 dark:bg-grey-400">
+      <div className="bg-yellow-200 dark:bg-grey-400 px-3 py-2 rounded-lg ">
         <h1 className="text-2xl font-bold text-rose-500">Rocketgram</h1>
         <div className="card ">
           <form onSubmit={writeData}>
@@ -63,30 +62,37 @@ function App() {
             <input className="bg-cyan-300 hover:bg-cyan-600 rounded-lg px-4 py-1 " type="submit" value="Submit" />
           </form>
         </div>
-        <container>
-          <div className="flex flex-col md:flex-row">
-            <div className="flex-1">
-              <h2 className="p-1 text-lg">Time & Date</h2>
-              <ul>
-                {messages.reverse().map((message) => (
-                  <li className="p-1" key={message.key}>
-                    {message.val.Timestamp}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="flex-1">
-              <h2 className="p-1 text-lg">Comments</h2>
-              <ul>
-                {messages.map((message) => (
-                  <li className="p-1" key={message.key}>
-                    {message.val.Comment}
-                  </li>
-                ))}
-              </ul>
-            </div>
+
+        <div className="flex flex-col md:flex-row">
+          <div className="flex-1">
+            <h2 className="p-2 text-lg">Time & Date</h2>
+            <ul>
+              {messages.reverse().map((message) => (
+                <li className="p-2 flex" key={message.key}>
+                  {message.val.Timestamp}
+                </li>
+              ))}
+            </ul>
           </div>
-        </container>
+          <div className="flex-1">
+            <h2 className="p-2 text-lg">Chats</h2>
+            <ul>
+              {messages.map((message) => (
+                <li className="p-2 flex justify-center items-center" key={message.key}>
+                  <span className="flex-1">{message.val.Comment}</span>
+                  <button
+                    className="ml-auto rounded-lg outline outline-offset-2 outline-blue-300"
+                    onClick={() => {
+                      deleteMessage(message.key);
+                    }}
+                  >
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </div>
     </>
   );
