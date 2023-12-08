@@ -48,7 +48,7 @@ function App() {
 
   return (
     <>
-      <div className="bg-yellow-200 dark:bg-grey-400 px-3 py-2 rounded-lg ">
+      <div className="bg-gradient-to-b from-cyan-300 to-white-100 shadow-2xl dark:bg-grey-400 px-3 py-2 rounded-lg ">
         <h1 className="text-2xl font-bold text-rose-500">Rocketgram</h1>
         <div className="card ">
           <form onSubmit={writeData}>
