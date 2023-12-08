@@ -6,9 +6,16 @@ import { useState, useEffect } from "react";
 
 // Save the Firebase message folder name as a constant to avoid bugs due to misspelling
 const DB_MESSAGES_KEY = "messages";
+//set date
+const DATE = new Date().toDateString();
 
 function App() {
   const [messages, setMessages] = useState([]);
+  const [userInput, setUserInput] = useState("");
+
+  const handleInputChange = (e) => {
+    setUserInput(e.target.value);
+  };
 
   useEffect(() => {
     const messagesRef = ref(database, DB_MESSAGES_KEY);
@@ -20,17 +27,29 @@ function App() {
         [...prevState, { key: data.key, val: data.val() }]
       );
     });
-  }, []);
+  }, [setMessages, setUserInput]);
 
-  const writeData = () => {
+  const writeData = (e) => {
+    e.preventDefault();
     const messageListRef = ref(database, DB_MESSAGES_KEY);
     const newMessageRef = push(messageListRef);
-    set(newMessageRef, "abc");
+
+    const messageData = {
+      text: userInput,
+      timestamp: DATE,
+    };
+
+    set(newMessageRef, messageData);
+    setUserInput("");
   };
 
   // Convert messages in state to message JSX elements to render
   let messageListItems = messages.map((message) => (
-    <li key={message.key}>{message.val}</li>
+    <li key={message.key}>
+      <p>
+        {message.val.timestamp}: {message.val.text}
+      </p>
+    </li>
   ));
 
   return (
@@ -41,7 +60,13 @@ function App() {
       <h1>Instagram Bootcamp</h1>
       <div className="card">
         {/* TODO: Add input field and add text input as messages in Firebase */}
-        <button onClick={writeData}>Send</button>
+        <form onSubmit={writeData}>
+          <input type="text" value={userInput} onChange={handleInputChange} />
+          <br />
+          <button type="submit" onClick={writeData}>
+            Send
+          </button>
+        </form>
         <ol>{messageListItems}</ol>
       </div>
     </>
