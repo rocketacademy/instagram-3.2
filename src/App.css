@@ -55,12 +55,23 @@
 .text-messages {
   font-size: 1.25em;
   font-weight: 420;
+  width: 18em;
 }
 
-.timestamp {
+.info {
   font-family: "JetBrains Mono", monospace;
   font-weight: 300;
   font-size: 0.75em;
   letter-spacing: 0.075em;
   font-feature-settings: "cv18", "zero";
+}
+
+.edit-delete {
+  font-family: InterVariable;
+  display: inline-block;
+}
+
+#timestamp {
+  margin-right: 4em;
+  display: inline-block;
 }
