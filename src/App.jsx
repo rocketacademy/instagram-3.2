@@ -54,12 +54,14 @@ export default function App() {
   const deleteAll = () => remove(messagesRef);
 
   const editData = (data, i) => {
-    setIsEditing((prev) => prev.map((item, j) => (i === j ? !item : item)));
+    setEditValue(data?.val?.message);
+    setIsEditing((prev) => prev.map((bool, j) => (i === j ? !bool : bool)));
     if (isEditing[i]) {
       update(ref(database, DB_MESSAGES_KEY + "/" + data.key), {
         edited: `${new Date()}`,
         message: editValue,
       });
+      setEditValue("");
     }
   };
 
@@ -73,7 +75,7 @@ export default function App() {
         {isEditing[index] ? (
           <input
             type="text"
-            value={editValue || message.val.message}
+            value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
           />
         ) : (
