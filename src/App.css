@@ -5,6 +5,7 @@
   text-align: center;
 }
 
+
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -38,6 +39,17 @@
   box-shadow: 1px 2px 157px -14px rgba(247,245,245,0.75);
 -webkit-box-shadow: 1px 2px 157px -14px rgba(247,245,245,0.75);
 -moz-box-shadow: 1px 2px 157px -14px rgba(247,245,245,0.75);
+}
+
+.messages-container::-webkit-scrollbar{
+  width: 0.5em;
+}
+.messages-container::-webkit-scrollbar-track{
+  margin-block: 1.5rem;
+}
+.messages-container::-webkit-scrollbar-thumb{
+  background: #636363;
+  border-radius: 100vw;
 }
 
 .pfp-container{

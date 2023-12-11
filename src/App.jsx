@@ -21,7 +21,6 @@ function App() {
         [...prevState, { key: data.key, val: data.val() }]
       );
     });
-    console.log(textInputValue);
   }, []);
 
   const writeData = () => {
