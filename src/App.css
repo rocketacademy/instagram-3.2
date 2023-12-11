@@ -36,3 +36,8 @@
 .card {
   padding: 2em;
 }
+
+img {
+  width: 50vw;
+  height: 30vh;
+}
