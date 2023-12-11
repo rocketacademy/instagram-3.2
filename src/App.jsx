@@ -9,8 +9,7 @@ const DB_MESSAGES_KEY = "messages";
 
 function App() {
   const [messages, setMessages] = useState([]);
-  const [textInputValue, setTextInputValue] =useState("")
-
+  const [textInputValue, setTextInputValue] = useState("");
 
   useEffect(() => {
     const messagesRef = ref(db, DB_MESSAGES_KEY);
@@ -22,31 +21,56 @@ function App() {
         [...prevState, { key: data.key, val: data.val() }]
       );
     });
+    console.log(textInputValue);
   }, []);
 
   const writeData = () => {
     const messageListRef = ref(db, DB_MESSAGES_KEY);
     const newMessageRef = push(messageListRef);
-    set(newMessageRef);
+    set(newMessageRef, {
+      textContent: textInputValue,
+      time: new Date().toLocaleTimeString(),
+    });
+    setTextInputValue("");
   };
 
   // Convert messages in state to message JSX elements to render
   let messageListItems = messages.map((message) => (
-    <li key={message.key}>{message.val}</li>
+    <li key={message}>
+      <div className="message">
+        <div className="pfp-container">
+          <img src={logo} className="logo" alt="Rocket logo" />
+        </div>
+        <p className="message-content">{message.val.textContent}</p>{" "}
+        <small className="message-time-stamp">{message.val.time}</small>
+      </div>
+    </li>
   ));
 
   return (
-    <>
-      <div>
-        <img src={logo} className="logo" alt="Rocket logo" />
-      </div>
-      <h1>Instagram Bootcamp</h1>
+    <div className="chat">
+      <h1 className="chatroom-header">Test Chat</h1>
       <div className="card">
-        <input placeholder="write message..." type="text" name="" id="" onChange={setTextInputValue}/>
-        <button onClick={writeData}>Send</button>
-        <ol>{messageListItems}</ol>
+        <div className="messages-container">
+          <ul className="message-list" style={{ listStyle: "none" }}>
+            {messageListItems}
+          </ul>
+        </div>
+        <div className="text-message-input">
+          <input
+            autoFocus={true}
+            placeholder="Write message..."
+            type="text"
+            name=""
+            id=""
+            value={textInputValue}
+            onChange={(e) => setTextInputValue(e.target.value)}
+            className="message-field"
+          />
+          <button onClick={writeData}>Send</button>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 
