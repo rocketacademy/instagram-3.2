@@ -13,10 +13,12 @@ import {
   ref as storageRef,
   uploadBytes,
 } from "firebase/storage";
-import { database, storage } from "./firebase";
+import { database, storage } from "./firebase.jsx";
 import { useState, useEffect } from "react";
-import Card from "@mui/material/Card";
-import { useTheme } from "@emotion/react";
+import MessageList from "./MessageList.jsx";
+import AuthForm from "./AuthForm.jsx";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "./firebase";
 
 // Save the Firebase message folder name as a constant to avoid bugs due to misspelling
 const DB_MESSAGES_KEY = "messages";
@@ -30,6 +32,28 @@ function App() {
   const [userInput, setUserInput] = useState("");
   const [userInputFile, setUserInputFile] = useState([]);
   const [fileInputValue, setFileInputValue] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Authentication
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      console.log(user);
+      if (user) {
+        setIsLoggedIn(user);
+        return;
+      }
+      // Else set logged-in user in state to null
+      setIsLoggedIn(null);
+    });
+  });
+
+  const handleSignOut = () => {
+    auth.signOut().then(() => {
+      // Sign-out successful.
+      setIsLoggedIn(false); // Update isLoggedIn state or perform any other necessary actions
+      console.log("User signed out successfully");
+    });
+  };
 
   const handleInputChange = (e) => {
     setUserInput(e.target.value);
@@ -133,54 +157,44 @@ function App() {
       });
   };
 
-  // Convert messages in state to message JSX elements to render
-  let messageListItems = messages.map((message) => (
-    <Card variant="outlined" key={message.key}>
-      <li>
-        <p>{message.val.timestamp}</p>
-        <p>{message.val.text}</p>
-        <img src={message.val.imageURL} alt="Uploaded" />
-        <br />
-        <button
-          type="edit"
-          onClick={() => {
-            const newText = prompt("Edit your message:");
-            if (newText !== null) {
-              editMessage(message.key, newText);
-            }
-          }}
-        >
-          Edit
-        </button>
-        <button type="delete" onClick={() => removeMessage(message.key)}>
-          Delete
-        </button>
-      </li>
-    </Card>
-  ));
-
   return (
     <>
       <div>
         <img src={logo} className="logo" alt="Rocket logo" />
       </div>
       <h1>Instagram Bootcamp</h1>
-      <div className="card">
-        {/* TODO: Add input field and add text input as messages in Firebase */}
-        <form onSubmit={writeData}>
-          <input type="text" value={userInput} onChange={handleInputChange} />
-          <br />
-          <br />
-          <input type="file" value={fileInputValue} onChange={handleImages} />
-          <br />
-          <br />
-          <button type="submit" onClick={writeData}>
-            Submit
-          </button>
-        </form>
-      </div>
+
+      {/* hide login portions when signed in */}
+      {isLoggedIn ? (
+        <button onClick={handleSignOut}>Sign Out</button>
+      ) : (
+        <AuthForm />
+      )}
+      {/* show data only when signed in */}
+      {isLoggedIn ? (
+        <div className="card">
+          {/* TODO: Add input field and add text input as messages in Firebase */}
+          <form onSubmit={writeData}>
+            Message:
+            <input type="text" value={userInput} onChange={handleInputChange} />
+            <br />
+            <br />
+            Upload image:
+            <input type="file" value={fileInputValue} onChange={handleImages} />
+            <br />
+            <br />
+            <button type="submit">Submit</button>
+          </form>
+        </div>
+      ) : null}
       <div>
-        <ol>{messageListItems}</ol>
+        {isLoggedIn && (
+          <MessageList
+            messages={messages}
+            editMessage={editMessage}
+            removeMessage={removeMessage}
+          />
+        )}
       </div>
     </>
   );
