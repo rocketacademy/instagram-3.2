@@ -2,27 +2,38 @@ import logo from "/logo.png";
 import "./App.css";
 import {
   onChildAdded,
+  onChildChanged,
+  onChildRemoved,
   push,
-  ref,
+  ref as databaseRef,
   set,
   remove,
   update,
-  onChildRemoved,
-  onChildChanged,
 } from "firebase/database";
-import { database } from "./firebase";
+import {
+  getDownloadURL,
+  ref as storageRef,
+  uploadBytes,
+} from "firebase/storage";
+import { database, storage, auth } from "./firebase";
 import { useState, useEffect } from "react";
 
 // Save the Firebase message folder name as a constant to avoid bugs due to misspelling
 const DB_MESSAGES_KEY = "messages";
+const DB_IMAGES_KEY = "images";
 
 export default function App() {
+  //capture message
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
+  //capture edit
   const [isEditing, setIsEditing] = useState([]);
   const [editValue, setEditValue] = useState("");
+  //capture file
+  const [file, setFile] = useState(null);
 
-  const messagesRef = ref(database, DB_MESSAGES_KEY);
+  const messagesRef = databaseRef(database, DB_MESSAGES_KEY);
+  const imgRef = storageRef(storage, DB_IMAGES_KEY);
 
   useEffect(() => {
     onChildAdded(messagesRef, (data) =>
@@ -41,15 +52,26 @@ export default function App() {
   }, []); // eslint-disable-line
 
   useEffect(() => {
-    setIsEditing(messages.map(() => false));
+    setIsEditing(messages.map(() => false)); //amount of "false" in array to be same as messages.length
   }, [messages]);
 
-  const writeData = () =>
+  const writeData = async () => {
+    let url = "";
+    if (file) {
+      const newStorageRef = storageRef(
+        storage,
+        DB_IMAGES_KEY + "/" + file.name
+      );
+      await uploadBytes(newStorageRef, file);
+      url = await getDownloadURL(newStorageRef);
+    }
     set(push(messagesRef), {
       timestamp: `${new Date()}`,
-      edited: ``,
+      edited: "",
       message: inputValue,
+      URL: url,
     });
+  };
 
   const deleteAll = () => remove(messagesRef);
 
@@ -57,7 +79,7 @@ export default function App() {
     setEditValue(data?.val?.message);
     setIsEditing((prev) => prev.map((bool, j) => (i === j ? !bool : bool)));
     if (isEditing[i]) {
-      update(ref(database, DB_MESSAGES_KEY + "/" + data.key), {
+      update(databaseRef(database, DB_MESSAGES_KEY + "/" + data.key), {
         edited: `${new Date()}`,
         message: editValue,
       });
@@ -66,7 +88,7 @@ export default function App() {
   };
 
   const deleteData = (data) =>
-    remove(ref(database, DB_MESSAGES_KEY + "/" + data.key));
+    remove(databaseRef(database, DB_MESSAGES_KEY + "/" + data.key));
 
   // Convert messages in state to message JSX elements to render
   const messageListItems = messages.map((message, index) => {
@@ -84,6 +106,11 @@ export default function App() {
         <div className="edit-delete">
           <button onClick={() => editData(message, index)}>Edit</button>
           <button onClick={() => deleteData(message)}>Delete</button>
+        </div>
+        <div>
+          {message?.val?.URL && (
+            <img src={message.val.URL} alt="image" width="100px" />
+          )}
         </div>
         <div className="info">
           <span style={{ paddingRight: "1.325em" }}>Sent: </span>
@@ -109,9 +136,15 @@ export default function App() {
       <div className="card">
         {/* TODO: Add input field and add text input as messages in Firebase */}
         <form onSubmit={(e) => (e.preventDefault(), e.target.reset())}>
-          <input type="text" onChange={(e) => setInputValue(e.target.value)} />{" "}
-          <button onClick={() => writeData()}>Send</button>
-          <button onClick={() => deleteAll()}>NUKE</button>
+          <input type="text" onChange={(e) => setInputValue(e.target.value)} />
+          <button disabled={!inputValue} onClick={() => writeData()}>
+            Send
+          </button>
+          <button disabled={messages.length === 0} onClick={() => deleteAll()}>
+            NUKE
+          </button>
+          <br />
+          <input type="file" onChange={(e) => setFile(e.target.files[0])} />
         </form>
         <ul className="message-box">{messageListItems}</ul>
       </div>
