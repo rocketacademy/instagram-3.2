@@ -1,8 +1,15 @@
+body{
+  background-color: #3B3B3B;
+  color: #ffffff;
+}
 #root {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
 }
 
 
@@ -39,6 +46,10 @@
   box-shadow: 1px 2px 157px -14px rgba(247,245,245,0.75);
 -webkit-box-shadow: 1px 2px 157px -14px rgba(247,245,245,0.75);
 -moz-box-shadow: 1px 2px 157px -14px rgba(247,245,245,0.75);
+}
+
+.messages-container * {
+    overflow-anchor: none;
 }
 
 .messages-container::-webkit-scrollbar{
@@ -89,8 +100,67 @@
 }
 
 .message{
+  position: relative;
   display: flex;
   justify-content: center;
   width: 100%;
   align-items: center;
+}
+
+.message-context-menu{
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  /* position:absolute; */
+  width: 5rem;
+  height: 100%rem;
+  border-radius: 0.375rem;
+  background-color: #3B3B3B;
+  overflow: hidden;
+}
+
+.message-edit{
+  transition: background-color 0.3s;
+}
+.message-delete{
+  transition: background-color 0.3s;
+}
+.message-edit:hover{
+  background-color: #636363;
+}
+.message-delete:hover{
+  background-color: #636363;
+}
+
+.messages-anchor{
+  height: 1px;
+  overflow-anchor: auto;
+}
+
+@media screen and (max-width:768px) {
+  .messages-container{
+    padding: 0;
+    border-radius: 0.375rem;
+    height: 87vh;
+  }
+  #root{
+    margin: 0;
+    padding: 0;
+  }
+  .chat{
+    width: 100vw;
+  }
+  .card{
+    padding: 0;
+    width: 100vw;
+  }
+  .chatroom-header{
+    margin: 0;
+    font-size: 2rem;
+  }
+}
+
+#dropdownic-basic{
+  background-color: rgba(0, 0, 0, 0);
+  border: none;
 }
