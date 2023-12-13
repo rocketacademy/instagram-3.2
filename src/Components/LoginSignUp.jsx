@@ -3,7 +3,7 @@ import { useState } from "react";
 import { auth } from "../firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 
-function LoginSignUp({setUser, setIsLoggedIn}) {
+function LoginSignUp({setUser, setIsLoggedIn, isLoggedIn}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -31,6 +31,8 @@ function LoginSignUp({setUser, setIsLoggedIn}) {
 
   return (
     <div className="login-page">
+      {isLoggedIn? null : 
+      <>
       <label>Email: </label>
       <input value={email} onChange={(e) => setEmail(e.target.value)}></input>
       <br />
@@ -43,6 +45,8 @@ function LoginSignUp({setUser, setIsLoggedIn}) {
         <button onClick={signIn}>Sign In</button>
         <button onClick={signUp}>Sign Up</button>
       </div>
+      </>}
+      
 
     </div>
   );
