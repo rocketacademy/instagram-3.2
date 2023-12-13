@@ -96,7 +96,7 @@ body{
 
 .message-time-stamp{
   width: 20%;
-  color: #3B3B3B;
+  color: #636363;
 }
 
 .message{
@@ -163,4 +163,12 @@ body{
 #dropdownic-basic{
   background-color: rgba(0, 0, 0, 0);
   border: none;
+}
+
+ input[type="file"]{
+  display: none;
+}
+.message-image{
+  width: 100%;
+  border-radius: 30px;
 }

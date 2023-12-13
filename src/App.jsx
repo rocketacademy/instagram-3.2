@@ -1,6 +1,7 @@
 import logo from "/logo.png";
 import { onChildAdded, onChildChanged, push, ref, set, update, remove, onChildRemoved } from "firebase/database";
-import { db } from "./firebase";
+import {ref as storageRef, uploadBytes, getDownloadURL} from 'firebase/storage'
+import { db, storage } from "./firebase";
 import { useState, useEffect, useLayoutEffect } from "react";
 import Dropdown from "react-bootstrap/Dropdown";
 import "./App.css";
@@ -8,16 +9,24 @@ import "./App.css";
 
 // Save the Firebase message folder name as a constant to avoid bugs due to misspelling
 const DB_MESSAGES_KEY = "messages";
+const DB_STORAGE_KEY = "images"
 
 function App() {
+  //captures full messages
   const [messages, setMessages] = useState([]);
+  //captures text content
   const [textInputValue, setTextInputValue] = useState("");
+  //captures storage files
+  const [fileInputFile, setFileInputFile] = useState(null);
+  // const [fileInputValue, setFileInputValue] = useState("")
 
+  const messageListRef = ref(db, DB_MESSAGES_KEY);
 
   //editing
   const [editing, setEditing] = useState(false);
   const [editingData, setEditingData] = useState({})
   const messagesRef = ref(db, DB_MESSAGES_KEY);
+  
 
   //for writing data
   useEffect(() => {
@@ -36,6 +45,7 @@ function App() {
    
   }, []);
 
+  //for edit
   useEffect(()=>{
     onChildChanged(messagesRef, (data) =>{
       const messageArr = [...messages];
@@ -54,14 +64,40 @@ function App() {
     .scrollTo(0, document.querySelector(".messages-container").scrollHeight);
   })
   
-  const writeData = () => {
-    if (textInputValue!=""){const messageListRef = ref(db, DB_MESSAGES_KEY);
+  const writeData = (e) => {
+    if (textInputValue!=""){
+      e.preventDefault()
+
       const newMessageRef = push(messageListRef);
-      set(newMessageRef, {
-        textContent: textInputValue,
-        time: new Date().toLocaleTimeString(navigator.language,{hour: "2-digit", minute:"2-digit"}),
-      });
-      setTextInputValue("");}
+      if(fileInputFile){
+      const storageRefInstance = storageRef(
+        storage,
+        DB_STORAGE_KEY + fileInputFile.name
+      );
+      
+      uploadBytes(storageRefInstance, fileInputFile).then(()=>{
+        getDownloadURL(storageRefInstance).then((url) => {
+          
+          set(newMessageRef, {
+            textContent: textInputValue,
+            url:url,
+            time: new Date().toLocaleTimeString(navigator.language,{hour: "2-digit", minute:"2-digit"}),
+          });
+        })
+      })}
+      else{
+        set(newMessageRef, {
+          textContent: textInputValue,
+          time: new Date().toLocaleTimeString(navigator.language, {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        });
+      }
+      
+      setTextInputValue("");
+      setFileInputFile(null)
+    }
     };
     //kick off update
     const startUpdate = (message) =>{
@@ -97,14 +133,28 @@ function App() {
         <div className="pfp-container">
           <img src={logo} className="logo" alt="Rocket logo" />
         </div>
-        <p className="message-content">{message.val.textContent}</p>{" "}
+        <div className="message-content">
+          <img className="message-image" src={message.val.url} alt={message.val.url} />
+          <p>{message.val.textContent}</p>
+        </div>
         <small className="message-time-stamp">{message.val.time}</small>
         <Dropdown>
-          <Dropdown.Toggle variant="success" id="dropdownic-basic">
-          </Dropdown.Toggle>
+          <Dropdown.Toggle
+            variant="success"
+            id="dropdownic-basic"
+          ></Dropdown.Toggle>
           <Dropdown.Menu>
-            <Dropdown.Item onClick={()=>{startUpdate(message);document.getElementById("message-input").focus();}}>Edit</Dropdown.Item>
-            <Dropdown.Item onClick={()=>deleteMessage(message)}>Delete</Dropdown.Item>
+            <Dropdown.Item
+              onClick={() => {
+                startUpdate(message);
+                document.getElementById("message-input").focus();
+              }}
+            >
+              Edit
+            </Dropdown.Item>
+            <Dropdown.Item onClick={() => deleteMessage(message)}>
+              Delete
+            </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
       </div>
@@ -121,7 +171,10 @@ function App() {
           </ul>
           <div className="messages-anchor"></div>
         </div>
-        <form onSubmit={editing? editData:writeData} className="text-message-input">
+        <form
+          onSubmit={editing ? editData : writeData}
+          className="text-message-input"
+        >
           <input
             autoFocus={true}
             placeholder="Write message..."
@@ -132,11 +185,28 @@ function App() {
             onChange={(e) => setTextInputValue(e.target.value)}
             className="message-field"
           />
-          <button type="button">
-            <i class="fa-solid fa-image"></i>{" "}
+          <button
+            style={
+              fileInputFile != null
+                ? { border: "1px solid green" }
+                : { border: "none" }
+            }
+            type="button"
+          >
+            <label htmlFor="file-upload">
+              <i className="fa-solid fa-image"></i>
+            </label>{" "}
+            <input
+              type="file"
+              id="file-upload"
+              className="hidden-input"
+              onChange={(e) => {
+                setFileInputFile(e.target.files[0]);
+              }}
+            />
           </button>
           <button type="submit">
-            <i class="fa-solid fa-paper-plane"></i>
+            <i className="fa-solid fa-paper-plane"></i>
           </button>
         </form>
       </div>
