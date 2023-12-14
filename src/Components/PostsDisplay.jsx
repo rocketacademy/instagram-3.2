@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from "react-router-dom";
 
 function PostsDisplay({
   messages,
@@ -7,7 +8,9 @@ function PostsDisplay({
   addLike,
   addDislikes,
   isLoggedIn,
+  user
 }) {
+  const navigate = useNavigate()
   const tdStyle = { border: "1px solid white", padding: "10px" };
 
   let messageListItems = (
@@ -33,12 +36,15 @@ function PostsDisplay({
               <div>{message.val.timeStamp}</div>
             </td>
             <td style={tdStyle}>
-              {isLoggedIn ? (
-                <button onClick={() => startUpdate(message)}>Edit</button>
+              {isLoggedIn && message.val.name == user.email ? (
+                <button onClick={() => {
+                  startUpdate(message)
+                  navigate("/form")
+                } }>Edit</button>
               ) : null}
             </td>
             <td style={tdStyle}>
-              {isLoggedIn ? (
+              {isLoggedIn && message.val.name == user.email ? (
                 <button onClick={() => deleteMessage(message.key)}>
                   Delete
                 </button>

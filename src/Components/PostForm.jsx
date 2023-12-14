@@ -7,6 +7,7 @@ import {
 import { push, ref, set, update } from "firebase/database"; 
 import { database, storage } from "../firebase";
 import { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 
 const DB_STORAGE_KEY = "images"; 
 const DB_MESSAGES_KEY = "messages";
@@ -19,6 +20,7 @@ function PostForm({isLoggedIn, user, editing, setEditing, setEditingData, editin
   const [currentDislikes, setCurrentDislikes] = useState(0);
 
   const messagesRef = ref(database, DB_MESSAGES_KEY);
+  const navigate = useNavigate();
 
   const writeData = (e) => {
     e.preventDefault();
@@ -44,6 +46,7 @@ function PostForm({isLoggedIn, user, editing, setEditing, setEditingData, editin
     } catch (err) {
       console.log(err);
     }
+    navigate("/posts");
   };
 
   const editData = (e) => {
@@ -55,19 +58,24 @@ function PostForm({isLoggedIn, user, editing, setEditing, setEditingData, editin
       text: textInput,
       name: user.email,
       timeStamp: new Date().toLocaleString(),
-      url: currentURL,
-      likes: currentLikes,
-      dislikes: currentDislikes,
+      url: editingData.val.url,
+      likes: editingData.val.likes,
+      dislikes: editingData.val.dislikes,
     };
 
     update(messagesRef, updates);
     setTextInput("");
     setEditingData({});
+    navigate("/posts");
   };
+
+  useEffect(() => {
+    Object.keys(editingData).length === 0 ? setTextInput("") : setTextInput(editingData.val.text);
+  },[])
 
   return (
     <div>
-      {user.email? <p> Welcome back! {user.email} </p>: null}
+      {user.email? <p> Welcome! {user.email} </p>: null}
       {isLoggedIn? 
       <form
         onSubmit={editing ? editData : writeData}

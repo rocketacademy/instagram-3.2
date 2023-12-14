@@ -2,10 +2,13 @@ import React from "react";
 import { useState } from "react";
 import { auth } from "../firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
 function LoginSignUp({setUser, setIsLoggedIn, isLoggedIn}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const navigate = useNavigate();
 
   const signUp = () => {
     createUserWithEmailAndPassword(auth, email, password)
@@ -16,6 +19,7 @@ function LoginSignUp({setUser, setIsLoggedIn, isLoggedIn}) {
       .catch((err) => {
         console.log(err);
       });
+      navigate("/form")
   };
 
   const signIn = () => {
@@ -27,6 +31,7 @@ function LoginSignUp({setUser, setIsLoggedIn, isLoggedIn}) {
       .catch((err) => {
         console.log(err);
       });
+      navigate("/form");
   };
 
   return (

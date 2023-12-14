@@ -18,7 +18,7 @@ import {
   onChildRemoved,
 } from "firebase/database";
 import { database, auth } from "./firebase";
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate, useNavigate } from "react-router-dom";
 
 const DB_MESSAGES_KEY = "messages";
 
@@ -118,6 +118,7 @@ function App() {
            deleteMessage={deleteMessage}
            addLike={addLike}
            addDislikes={addDislikes}
+           user={user}
          />
        </div>
      ),
