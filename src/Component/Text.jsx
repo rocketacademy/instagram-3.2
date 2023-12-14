@@ -14,17 +14,19 @@ import {
   uploadBytes,
   getDownloadURL,
 } from "firebase/storage";
-import { db, storage } from "../firebase";
+import { db, storage, auth } from "../firebase";
 import { useState, useEffect, useLayoutEffect } from "react";
 import Dropdown from "react-bootstrap/Dropdown";
-
+import { signOut } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
 // Save the Firebase message folder name as a constant to avoid bugs due to misspelling
 const DB_MESSAGES_KEY = "messages";
-const DB_STORAGE_KEY = "images"
+const DB_STORAGE_KEY = "images";
 
-export default function Texts() {
-    //captures full messages
+export default function Texts(props) {
+  let { user } = props;
+  //captures full messages
   const [messages, setMessages] = useState([]);
   //captures text content
   const [textInputValue, setTextInputValue] = useState("");
@@ -36,9 +38,10 @@ export default function Texts() {
 
   //editing
   const [editing, setEditing] = useState(false);
-  const [editingData, setEditingData] = useState({})
+  const [editingData, setEditingData] = useState({});
   const messagesRef = ref(db, DB_MESSAGES_KEY);
-  
+
+  const navigate = useNavigate();
 
   //for writing data
   useEffect(() => {
@@ -50,54 +53,55 @@ export default function Texts() {
         [...prevState, { key: data.key, val: data.val() }]
       );
     });
-    onChildRemoved(messagesRef, (data) =>{
-      setMessages((prev) => prev.filter((item) => item.key !== data.key))
-    })
+    onChildRemoved(messagesRef, (data) => {
+      setMessages((prev) => prev.filter((item) => item.key !== data.key));
+    });
     console.log(document.querySelector(".messages-container").scrollHeight);
-   
+    console.log(user);
   }, []);
 
   //for edit
-  useEffect(()=>{
-    onChildChanged(messagesRef, (data) =>{
+  useEffect(() => {
+    onChildChanged(messagesRef, (data) => {
       const messageArr = [...messages];
       let isIndex = (element) => element.key == data.key;
       const index = messageArr.findIndex(isIndex);
-      messageArr[index] = {key:data.key, val:data.val()};
-      setMessages(messageArr)
-    })
-  },[editing])
+      messageArr[index] = { key: data.key, val: data.val() };
+      setMessages(messageArr);
+    });
+  }, [editing]);
 
-  
   //for scroller to stay at the bottom, where i have created an anchor
-  useLayoutEffect(()=>{
+  useLayoutEffect(() => {
     document
-    .querySelector(".messages-container")
-    .scrollTo(0, document.querySelector(".messages-container").scrollHeight);
-  })
-  
+      .querySelector(".messages-container")
+      .scrollTo(0, document.querySelector(".messages-container").scrollHeight);
+  });
+
   const writeData = (e) => {
-    if (textInputValue!=""){
-      e.preventDefault()
+    if (textInputValue != "") {
+      e.preventDefault();
 
       const newMessageRef = push(messageListRef);
-      if(fileInputFile){
-      const storageRefInstance = storageRef(
-        storage,
-        DB_STORAGE_KEY + fileInputFile.name
-      );
-      
-      uploadBytes(storageRefInstance, fileInputFile).then(()=>{
-        getDownloadURL(storageRefInstance).then((url) => {
-          
-          set(newMessageRef, {
-            textContent: textInputValue,
-            url:url,
-            time: new Date().toLocaleTimeString(navigator.language,{hour: "2-digit", minute:"2-digit"}),
+      if (fileInputFile) {
+        const storageRefInstance = storageRef(
+          storage,
+          DB_STORAGE_KEY + fileInputFile.name
+        );
+
+        uploadBytes(storageRefInstance, fileInputFile).then(() => {
+          getDownloadURL(storageRefInstance).then((url) => {
+            set(newMessageRef, {
+              textContent: textInputValue,
+              url: url,
+              time: new Date().toLocaleTimeString(navigator.language, {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            });
           });
-        })
-      })}
-      else{
+        });
+      } else {
         set(newMessageRef, {
           textContent: textInputValue,
           time: new Date().toLocaleTimeString(navigator.language, {
@@ -106,37 +110,47 @@ export default function Texts() {
           }),
         });
       }
-      
+
       setTextInputValue("");
-      setFileInputFile(null)
+      setFileInputFile(null);
     }
+  };
+  //kick off update
+  const startUpdate = (message) => {
+    setEditing(true);
+    setTextInputValue(message.val.textContent);
+    setEditingData(message);
+  };
+
+  //for editing data
+  const editData = (e) => {
+    e.preventDefault();
+    document.getElementById("");
+    setEditing(false);
+    const updates = {};
+    updates[editingData.key] = {
+      textContent: textInputValue,
     };
-    //kick off update
-    const startUpdate = (message) =>{
-      setEditing(true);
-      setTextInputValue(message.val.textContent);
-      setEditingData(message);
-    }
-  
-    //for editing data
-    const editData = (e) => {
-      e.preventDefault();
-      document.getElementById("")
-      setEditing(false);
-      const updates ={};
-      updates[editingData.key]={
-        textContent: textInputValue
-      }
-      update(messagesRef, updates);
-      setTextInputValue("");
-      setEditingData({});
-    }
+    update(messagesRef, updates);
+    setTextInputValue("");
+    setEditingData({});
+  };
 
   //deleting
   const deleteMessage = (message) => {
-    remove(ref(db, `${DB_MESSAGES_KEY}/${message.key}`))
-  }
+    remove(ref(db, `${DB_MESSAGES_KEY}/${message.key}`));
+  };
 
+  //sign out
+
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      navigate("/welcome");
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // Convert messages in state to message JSX elements to render
   let messageListItems = messages.map((message) => (
@@ -146,7 +160,11 @@ export default function Texts() {
           <img src={logo} className="logo" alt="Rocket logo" />
         </div>
         <div className="message-content">
-          <img className="message-image" src={message.val.url} alt={message.val.url} />
+          <img
+            className="message-image"
+            src={message.val.url}
+            alt={message.val.url}
+          />
           <p>{message.val.textContent}</p>
         </div>
         <small className="message-time-stamp">{message.val.time}</small>
@@ -176,6 +194,7 @@ export default function Texts() {
   return (
     <div className="chat" data-bs-theme="dark">
       <h1 className="chatroom-header">Test Chat</h1>
+      <p className="username"> Hello, {user.email}</p>
       <div className="chat-container">
         <div className="messages-container">
           <ul className="message-list" style={{ listStyle: "none" }}>
@@ -221,6 +240,10 @@ export default function Texts() {
             <i className="fa-solid fa-paper-plane"></i>
           </button>
         </form>
+        <button onClick={logout}>
+          <i className="fa-solid fa-right-from-bracket"></i>
+        </button>
       </div>
-    </div>)
+    </div>
+  );
 }
