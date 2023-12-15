@@ -67,3 +67,8 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+.message-box {
+  background-color: grey;
+  border-radius: 8px;
+}
