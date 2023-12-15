@@ -32,8 +32,9 @@ export default function App() {
   //capture file
   const [file, setFile] = useState(null);
 
+  const [liked, setLiked] = useState([]);
+
   const messagesRef = databaseRef(database, DB_MESSAGES_KEY);
-  const imgRef = storageRef(storage, DB_IMAGES_KEY);
 
   useEffect(() => {
     onChildAdded(messagesRef, (data) =>
@@ -53,7 +54,8 @@ export default function App() {
 
   useEffect(() => {
     setIsEditing(messages.map(() => false)); //amount of "false" in array to be same as messages.length
-  }, [messages]);
+    setLiked(messages.map(() => false));
+  }, [messages.length]);
 
   const writeData = async () => {
     let url = "";
@@ -69,16 +71,19 @@ export default function App() {
       timestamp: `${new Date()}`,
       edited: "",
       message: inputValue,
-      URL: url,
+      url: url,
+      likeCount: 0,
     });
+    setInputValue("");
+    setFile(null);
   };
 
   const deleteAll = () => remove(messagesRef);
 
-  const editData = (data, i) => {
+  const editData = (data, index) => {
     setEditValue(data?.val?.message);
-    setIsEditing((prev) => prev.map((bool, j) => (i === j ? !bool : bool)));
-    if (isEditing[i]) {
+    setIsEditing((prev) => prev.toSpliced(index, 1, !prev[index]));
+    if (isEditing[index]) {
       update(databaseRef(database, DB_MESSAGES_KEY + "/" + data.key), {
         edited: `${new Date()}`,
         message: editValue,
@@ -96,6 +101,7 @@ export default function App() {
       <li key={message.key}>
         {isEditing[index] ? (
           <input
+            style={{ width: "12.5em", marginRight: "2.3em" }}
             type="text"
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
@@ -103,19 +109,97 @@ export default function App() {
         ) : (
           <div className="text-messages">{message.val.message}</div>
         )}
+
+        {liked[index] ? (
+          <button
+            onClick={() => {
+              setLiked((prev) => prev.toSpliced(index, 1, !prev[index]));
+              // update(
+              //   databaseRef(database, DB_MESSAGES_KEY + "/" + message.key),
+              //   {
+              //     likeCount: message.val.likeCount - 1,
+              //   }
+              // );
+            }}>
+            {message.val.likeCount}
+            <svg
+              className="with-icon_icon__MHUeb"
+              data-testid="geist-icon"
+              height="24"
+              shapeRendering="geometricPrecision"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.5"
+              viewBox="0 0 24 24"
+              width="24"
+              style={{
+                color: "var(--geist-foreground)",
+                "--geist-fill": "currentColor",
+                "--geist-stroke": "var(--geist-background)",
+                width: "1em",
+                height: "1em",
+              }}>
+              <path
+                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                fill="var(--geist-fill)"
+              />
+            </svg>
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              setLiked((prev) => prev.toSpliced(index, 1, !prev[index]));
+              update(
+                databaseRef(database, DB_MESSAGES_KEY + "/" + message.key),
+                {
+                  likeCount: message.val.likeCount + 1,
+                }
+              );
+            }}>
+            {message.val.likeCount}
+            <svg
+              className="with-icon_icon__MHUeb"
+              data-testid="geist-icon"
+              fill="none"
+              height="24"
+              shapeRendering="geometricPrecision"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.5"
+              viewBox="0 0 24 24"
+              width="24"
+              style={{
+                color: "var(--geist-foreground)",
+                width: "1em",
+                height: "1em",
+              }}>
+              <path
+                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                fill="var(--geist-fill)"
+              />
+            </svg>
+          </button>
+        )}
+
         <div className="edit-delete">
           <button onClick={() => editData(message, index)}>Edit</button>
           <button onClick={() => deleteData(message)}>Delete</button>
         </div>
         <div>
-          {message?.val?.URL && (
-            <img src={message.val.URL} alt="image" width="100px" />
+          {!!message?.val?.url && (
+            <img
+              src={message.val.url}
+              alt="image"
+              style={{ maxWidth: "150px", maxHeight: "150px" }}
+            />
           )}
         </div>
         <div className="info">
           <span style={{ paddingRight: "1.325em" }}>Sent: </span>
           {new Date(message.val.timestamp).toLocaleString()}
-          {message?.val?.edited && (
+          {!!message?.val?.edited && (
             <>
               <br />
               <span>Edited: </span>
@@ -132,11 +216,16 @@ export default function App() {
       <div>
         <img src={logo} className="logo" alt="Rocket logo" />
       </div>
-      <h1>Instagram Bootcamp</h1>
+      <h1>Rocketgram</h1>
       <div className="card">
         {/* TODO: Add input field and add text input as messages in Firebase */}
-        <form onSubmit={(e) => (e.preventDefault(), e.target.reset())}>
-          <input type="text" onChange={(e) => setInputValue(e.target.value)} />
+        <form onSubmit={(e) => e.preventDefault()}>
+          <input
+            style={{ width: "14.6em", marginRight: "1.4em" }}
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+          />
           <button disabled={!inputValue} onClick={() => writeData()}>
             Send
           </button>

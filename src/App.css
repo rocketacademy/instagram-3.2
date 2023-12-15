@@ -61,6 +61,7 @@ input {
   font-weight: 420;
   width: 15em;
   display: inline-flex;
+  text-wrap: balance;
 }
 
 .edit-delete {
