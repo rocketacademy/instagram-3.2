@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { auth } from "../firebase";
+import { auth } from "./firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 
 export default function LoginSignUp({ setIsLoggedIn, setUser }) {
