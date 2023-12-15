@@ -114,12 +114,12 @@ export default function App() {
           <button
             onClick={() => {
               setLiked((prev) => prev.toSpliced(index, 1, !prev[index]));
-              // update(
-              //   databaseRef(database, DB_MESSAGES_KEY + "/" + message.key),
-              //   {
-              //     likeCount: message.val.likeCount - 1,
-              //   }
-              // );
+              update(
+                databaseRef(database, DB_MESSAGES_KEY + "/" + message.key),
+                {
+                  likeCount: message.val.likeCount - 1,
+                }
+              );
             }}>
             {message.val.likeCount}
             <svg
@@ -139,6 +139,7 @@ export default function App() {
                 "--geist-stroke": "var(--geist-background)",
                 width: "1em",
                 height: "1em",
+                marginBottom: "-0.075em",
               }}>
               <path
                 d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
@@ -174,6 +175,7 @@ export default function App() {
                 color: "var(--geist-foreground)",
                 width: "1em",
                 height: "1em",
+                marginBottom: "-0.075em",
               }}>
               <path
                 d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
