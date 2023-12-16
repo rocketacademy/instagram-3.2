@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "Jetbrains Mono";
+  src: url(/JetBrainsMono-Light.woff2);
+}
+@font-face {
+  font-family: "Source Sans 3";
+  src: url(/SourceSans3VF-Upright.ttf.woff2);
+}
 :root {
   font-family: "Source Sans 3", system-ui, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -70,13 +78,4 @@ button:focus-visible {
 
 input {
   font-family: inherit;
-}
-
-@font-face {
-  font-family: "Jetbrains Mono";
-  src: url(/JetBrainsMono-Light.woff2);
-}
-@font-face {
-  font-family: "Source Sans 3";
-  src: url(/SourceSans3VF-Upright.ttf.woff2);
 }

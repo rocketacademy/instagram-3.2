@@ -64,7 +64,7 @@ input {
   text-wrap: balance;
 }
 
-.edit-delete {
+.buttons {
   font-size: 0.8125em;
   display: inline-flex;
 }
@@ -79,5 +79,5 @@ input {
 
 iconify-icon {
   position: relative;
-  top: 0.375em;
+  top: 0.35em;
 }

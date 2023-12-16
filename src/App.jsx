@@ -11,6 +11,7 @@ import {
   update,
 } from "firebase/database";
 import {
+  deleteObject,
   getDownloadURL,
   ref as storageRef,
   uploadBytes,
@@ -31,8 +32,10 @@ export default function App() {
   const [editValue, setEditValue] = useState("");
   //capture file
   const [file, setFile] = useState(null);
-
+  //capture likes
   const [liked, setLiked] = useState([]);
+  //check login status
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const messagesRef = databaseRef(database, DB_MESSAGES_KEY);
 
@@ -53,11 +56,14 @@ export default function App() {
   }, []); // eslint-disable-line
 
   useEffect(() => {
-    setIsEditing(messages.map(() => false)); //amount of "false" in array to be same as messages.length
-    setLiked(messages.map(() => false));
+    //amount of "false" in array to be same as messages.length
+    const arrayFillFalse = [...Array(messages.length)].fill(false);
+    setIsEditing(arrayFillFalse);
+    setLiked(arrayFillFalse);
   }, [messages.length]);
 
   const writeData = async () => {
+    let name = "";
     let url = "";
     if (file) {
       const newStorageRef = storageRef(
@@ -66,23 +72,28 @@ export default function App() {
       );
       await uploadBytes(newStorageRef, file);
       url = await getDownloadURL(newStorageRef);
+      name = file.name;
     }
     set(push(messagesRef), {
       timestamp: `${new Date()}`,
       edited: "",
       message: inputValue,
-      url: url,
+      fileName: name,
+      fileUrl: url,
       likeCount: 0,
     });
     setInputValue("");
     setFile(null);
   };
 
-  const deleteAll = () => remove(messagesRef);
+  const deleteAll = async () => {
+    await deleteObject(storageRef(storage, DB_IMAGES_KEY + "/"));
+    remove(messagesRef);
+  };
 
   const editData = (data, index) => {
     setEditValue(data?.val?.message);
-    setIsEditing((prev) => prev.toSpliced(index, 1, !prev[index]));
+    setIsEditing((prev) => prev.with(index, !prev[index]));
     if (isEditing[index]) {
       update(databaseRef(database, DB_MESSAGES_KEY + "/" + data.key), {
         edited: `${new Date()}`,
@@ -92,13 +103,38 @@ export default function App() {
     }
   };
 
-  const deleteData = (data) =>
+  const deleteData = async (data) => {
+    if (data.val.fileName) {
+      await deleteObject(
+        storageRef(storage, DB_IMAGES_KEY + "/" + data.val.fileName)
+      );
+    }
     remove(databaseRef(database, DB_MESSAGES_KEY + "/" + data.key));
+  };
+
+  const likeUnlike = (data, index) => {
+    if (liked[index]) {
+      setLiked((prev) => prev.with(index, !prev[index]));
+      update(databaseRef(database, DB_MESSAGES_KEY + "/" + data.key), {
+        likeCount: data.val.likeCount - 1,
+      });
+    } else {
+      setLiked((prev) => prev.with(index, !prev[index]));
+      update(databaseRef(database, DB_MESSAGES_KEY + "/" + data.key), {
+        likeCount: data.val.likeCount + 1,
+      });
+    }
+  };
 
   // Convert messages in state to message JSX elements to render
   const messageListItems = messages.map((message, index) => {
     return (
-      <li key={message.key}>
+      <li
+        key={message.key}
+        style={{
+          borderTop: "1px dotted white",
+        }}>
+        {/* input if editing, else just show message */}
         {isEditing[index] ? (
           <input
             style={{ width: "12.5em", marginRight: "2.3em" }}
@@ -109,42 +145,25 @@ export default function App() {
         ) : (
           <div className="text-messages">{message.val.message}</div>
         )}
+        <div className="buttons">
+          {/* like button that toggles */}
+          {liked[index] ? (
+            <button onClick={() => likeUnlike(message, index)}>
+              {message.val.likeCount}
+              <iconify-icon
+                icon="fa6-solid:heart"
+                style={{ color: "red" }}></iconify-icon>
+            </button>
+          ) : (
+            <button onClick={() => likeUnlike(message, index)}>
+              {message.val.likeCount}
+              <iconify-icon
+                icon="fa6-regular:heart"
+                style={{ color: "red" }}></iconify-icon>
+            </button>
+          )}
 
-        {liked[index] ? (
-          <button
-            onClick={() => {
-              setLiked((prev) => prev.toSpliced(index, 1, !prev[index]));
-              update(
-                databaseRef(database, DB_MESSAGES_KEY + "/" + message.key),
-                {
-                  likeCount: message.val.likeCount - 1,
-                }
-              );
-            }}>
-            {message.val.likeCount}
-            <iconify-icon
-              icon="fa6-solid:heart"
-              style={{ color: "red" }}></iconify-icon>
-          </button>
-        ) : (
-          <button
-            onClick={() => {
-              setLiked((prev) => prev.toSpliced(index, 1, !prev[index]));
-              update(
-                databaseRef(database, DB_MESSAGES_KEY + "/" + message.key),
-                {
-                  likeCount: message.val.likeCount + 1,
-                }
-              );
-            }}>
-            {message.val.likeCount}
-            <iconify-icon
-              icon="fa6-regular:heart"
-              style={{ color: "red" }}></iconify-icon>
-          </button>
-        )}
-
-        <div className="edit-delete">
+          {/* edit button that also submits edit value, other edit buttons are disabled while editing */}
           <button
             disabled={
               isEditing.some((bool) => bool === true)
@@ -156,10 +175,11 @@ export default function App() {
           </button>
           <button onClick={() => deleteData(message)}>Delete</button>
         </div>
+        {/* display image if it exist */}
         <div>
-          {!!message?.val?.url && (
+          {!!message?.val?.fileUrl && (
             <img
-              src={message.val.url}
+              src={message.val.fileUrl}
               alt="image"
               style={{ maxWidth: "150px", maxHeight: "150px" }}
             />
@@ -186,6 +206,13 @@ export default function App() {
         <img src={logo} className="logo" alt="Rocket logo" />
       </div>
       <h1>Rocketgram</h1>
+      <div className="login">
+        {!isLoggedIn ? (
+          <button onClick={() => setIsLoggedIn(!isLoggedIn)}>Log In</button>
+        ) : (
+          <button onClick={() => setIsLoggedIn(!isLoggedIn)}>Log Out</button>
+        )}
+      </div>
       <div className="card">
         {/* TODO: Add input field and add text input as messages in Firebase */}
         <form onSubmit={(e) => e.preventDefault()}>
@@ -195,16 +222,20 @@ export default function App() {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
           />
-          <button disabled={!inputValue} onClick={() => writeData()}>
+          <button disabled={!inputValue} onClick={writeData}>
             Send
           </button>
-          <button disabled={messages.length === 0} onClick={() => deleteAll()}>
+          <button disabled={messages.length === 0} onClick={deleteAll}>
             NUKE
           </button>
           <br />
           <input type="file" onChange={(e) => setFile(e.target.files[0])} />
         </form>
-        <ul className="message-box">{messageListItems}</ul>
+        <ul
+          className="message-box"
+          style={{ borderBottom: "1px dotted white" }}>
+          {messageListItems}
+        </ul>
       </div>
     </>
   );
