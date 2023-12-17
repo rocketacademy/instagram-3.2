@@ -19,6 +19,7 @@ import {
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signOut,
 } from "firebase/auth";
 import { database, storage, auth } from "./firebase";
 import { useState, useEffect } from "react";
@@ -43,6 +44,8 @@ export default function App() {
   //Login
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  //error
+  const [errorMsg, setErrorMsg] = useState("");
 
   const messagesRef = databaseRef(database, DB_MESSAGES_KEY);
 
@@ -144,8 +147,9 @@ export default function App() {
         password
       );
       console.log(userCredential);
+      setErrorMsg("");
     } catch (error) {
-      console.log(error);
+      setErrorMsg(error.message);
     }
   };
 
@@ -156,10 +160,21 @@ export default function App() {
         email,
         password
       );
-      setIsLoggedIn(!isLoggedIn);
       console.log(userCredential);
+      setErrorMsg("");
+      setIsLoggedIn(!isLoggedIn);
     } catch (error) {
-      console.log(error);
+      setErrorMsg(error.message);
+    }
+  };
+
+  const logOut = async () => {
+    try {
+      await signOut(auth);
+      setErrorMsg("");
+      setIsLoggedIn(!isLoggedIn);
+    } catch (error) {
+      setErrorMsg(error.message);
     }
   };
 
@@ -243,52 +258,61 @@ export default function App() {
         <img src={logo} className="logo" alt="Rocket logo" />
       </div>
       <h1>Rocketgram</h1>
-      <div className="login">
-        E-mail:{" "}
-        <input
-          type="text"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <br />
-        Password:{" "}
-        <input
-          type="text"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />{" "}
-        <br />
-        <button onClick={signUp}>Sign Up</button>
+      <div>
         {!isLoggedIn ? (
-          <button onClick={logIn}>Log In</button>
+          <>
+            E-mail:{" "}
+            <input
+              type="text"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <br />
+            Password:{" "}
+            <input
+              type="text"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />{" "}
+            <br />
+            <button onClick={signUp}>Sign Up</button>
+            <button onClick={logIn}>Login</button>
+            <p>{errorMsg}</p>
+          </>
         ) : (
-          <button onClick={() => setIsLoggedIn(!isLoggedIn)}>Log Out</button>
+          <>
+            <p>Welcome: {auth.currentUser.email}</p>
+            <button onClick={logOut}>Logout</button>
+            <p>{errorMsg}</p>
+          </>
         )}
       </div>
-      <div className="card">
-        {/* TODO: Add input field and add text input as messages in Firebase */}
-        <form onSubmit={(e) => e.preventDefault()}>
-          <input
-            style={{ width: "14.6em", marginRight: "1.4em" }}
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-          />
-          <button disabled={!inputValue} onClick={writeData}>
-            Send
-          </button>
-          <button disabled={messages.length === 0} onClick={deleteAll}>
-            NUKE
-          </button>
-          <br />
-          <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-        </form>
-        <ul
-          className="message-box"
-          style={{ borderBottom: "1px dotted white" }}>
-          {messageListItems}
-        </ul>
-      </div>
+      {!!isLoggedIn && (
+        <div className="card">
+          {/* TODO: Add input field and add text input as messages in Firebase */}
+          <form onSubmit={(e) => e.preventDefault()}>
+            <input
+              style={{ width: "14.6em", marginRight: "1.4em" }}
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+            />
+            <button disabled={!inputValue} onClick={writeData}>
+              Send
+            </button>
+            <button disabled={messages.length === 0} onClick={deleteAll}>
+              NUKE
+            </button>
+            <br />
+            <input type="file" onChange={(e) => setFile(e.target.files[0])} />
+          </form>
+          <ul
+            className="message-box"
+            style={{ borderBottom: "1px dotted white" }}>
+            {messageListItems}
+          </ul>
+        </div>
+      )}
     </>
   );
 }
