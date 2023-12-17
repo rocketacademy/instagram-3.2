@@ -16,6 +16,10 @@ import {
   ref as storageRef,
   uploadBytes,
 } from "firebase/storage";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 import { database, storage, auth } from "./firebase";
 import { useState, useEffect } from "react";
 
@@ -36,6 +40,9 @@ export default function App() {
   const [liked, setLiked] = useState([]);
   //check login status
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  //Login
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const messagesRef = databaseRef(database, DB_MESSAGES_KEY);
 
@@ -59,7 +66,7 @@ export default function App() {
     //amount of "false" in array to be same as messages.length
     const arrayFillFalse = [...Array(messages.length)].fill(false);
     setIsEditing(arrayFillFalse);
-    setLiked(arrayFillFalse);
+    setLiked(messages.map((message) => message.val.like));
   }, [messages.length]);
 
   const writeData = async () => {
@@ -81,13 +88,14 @@ export default function App() {
       fileName: name,
       fileUrl: url,
       likeCount: 0,
+      like: false,
     });
     setInputValue("");
     setFile(null);
   };
 
   const deleteAll = async () => {
-    await deleteObject(storageRef(storage, DB_IMAGES_KEY + "/"));
+    // await deleteObject(storageRef(storage, DB_IMAGES_KEY + "/"));
     remove(messagesRef);
   };
 
@@ -117,12 +125,41 @@ export default function App() {
       setLiked((prev) => prev.with(index, !prev[index]));
       update(databaseRef(database, DB_MESSAGES_KEY + "/" + data.key), {
         likeCount: data.val.likeCount - 1,
+        like: false,
       });
     } else {
       setLiked((prev) => prev.with(index, !prev[index]));
       update(databaseRef(database, DB_MESSAGES_KEY + "/" + data.key), {
         likeCount: data.val.likeCount + 1,
+        like: true,
       });
+    }
+  };
+
+  const signUp = async () => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      console.log(userCredential);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const logIn = async () => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      setIsLoggedIn(!isLoggedIn);
+      console.log(userCredential);
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -207,8 +244,23 @@ export default function App() {
       </div>
       <h1>Rocketgram</h1>
       <div className="login">
+        E-mail:{" "}
+        <input
+          type="text"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <br />
+        Password:{" "}
+        <input
+          type="text"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />{" "}
+        <br />
+        <button onClick={signUp}>Sign Up</button>
         {!isLoggedIn ? (
-          <button onClick={() => setIsLoggedIn(!isLoggedIn)}>Log In</button>
+          <button onClick={logIn}>Log In</button>
         ) : (
           <button onClick={() => setIsLoggedIn(!isLoggedIn)}>Log Out</button>
         )}
