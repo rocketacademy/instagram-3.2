@@ -42,10 +42,14 @@ export default function App() {
   //check login status
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   //Login
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [emailValue, setEmailValue] = useState("123@123.com");
+  const [passwordValue, setPasswordValue] = useState("123123");
   //error
   const [errorMsg, setErrorMsg] = useState("");
+
+  //user info
+  const [email, setEmail] = useState("");
+  const [uid, setUid] = useState("");
 
   const messagesRef = databaseRef(database, DB_MESSAGES_KEY);
 
@@ -67,10 +71,9 @@ export default function App() {
 
   useEffect(() => {
     //amount of "false" in array to be same as messages.length
-    const arrayFillFalse = [...Array(messages.length)].fill(false);
-    setIsEditing(arrayFillFalse);
-    setLiked(messages.map((message) => message.val.like));
-  }, [messages.length]);
+    setIsEditing([...Array(messages.length)].fill(false));
+    setLiked(messages.map((message) => !!message?.val?.like?.[uid]));
+  }, [messages.length, isLoggedIn]);
 
   const writeData = async () => {
     let name = "";
@@ -91,7 +94,7 @@ export default function App() {
       fileName: name,
       fileUrl: url,
       likeCount: 0,
-      like: false,
+      like: { [uid]: false },
     });
     setInputValue("");
     setFile(null);
@@ -128,13 +131,13 @@ export default function App() {
       setLiked((prev) => prev.with(index, !prev[index]));
       update(databaseRef(database, DB_MESSAGES_KEY + "/" + data.key), {
         likeCount: data.val.likeCount - 1,
-        like: false,
+        like: { ...data.val.like, [uid]: false },
       });
     } else {
       setLiked((prev) => prev.with(index, !prev[index]));
       update(databaseRef(database, DB_MESSAGES_KEY + "/" + data.key), {
         likeCount: data.val.likeCount + 1,
-        like: true,
+        like: { ...data.val.like, [uid]: true },
       });
     }
   };
@@ -143,8 +146,8 @@ export default function App() {
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
-        email,
-        password
+        emailValue,
+        passwordValue
       );
       console.log(userCredential);
       setErrorMsg("");
@@ -157,11 +160,13 @@ export default function App() {
     try {
       const userCredential = await signInWithEmailAndPassword(
         auth,
-        email,
-        password
+        emailValue,
+        passwordValue
       );
       console.log(userCredential);
       setErrorMsg("");
+      setEmail(auth.currentUser.email);
+      setUid(auth.currentUser.uid);
       setIsLoggedIn(!isLoggedIn);
     } catch (error) {
       setErrorMsg(error.message);
@@ -258,32 +263,35 @@ export default function App() {
         <img src={logo} className="logo" alt="Rocket logo" />
       </div>
       <h1>Rocketgram</h1>
-      <div>
+      <div className="login-component">
         {!isLoggedIn ? (
           <>
-            E-mail:{" "}
-            <input
-              type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <br />
-            Password:{" "}
-            <input
-              type="text"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />{" "}
-            <br />
+            <p>
+              <label htmlFor="email">E-mail: </label>
+              <input
+                type="email"
+                pattern=".+@example\.com"
+                value={emailValue}
+                onChange={(e) => setEmailValue(e.target.value)}
+              />
+            </p>
+            <p>
+              <label htmlFor="password">Password: </label>
+              <input
+                type="password"
+                value={passwordValue}
+                onChange={(e) => setPasswordValue(e.target.value)}
+              />
+            </p>
+            <p>{errorMsg}</p>
             <button onClick={signUp}>Sign Up</button>
             <button onClick={logIn}>Login</button>
-            <p>{errorMsg}</p>
           </>
         ) : (
           <>
-            <p>Welcome: {auth.currentUser.email}</p>
-            <button onClick={logOut}>Logout</button>
             <p>{errorMsg}</p>
+            <p>Welcome: {email}</p>
+            <button onClick={logOut}>Logout</button>
           </>
         )}
       </div>
