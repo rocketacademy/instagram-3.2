@@ -102,19 +102,6 @@ export default function App() {
     remove(databaseRef(database, DB_MESSAGES_KEY + "/" + data.key));
   };
 
-  const signUp = async () => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        emailValue,
-        passwordValue
-      );
-      console.log(userCredential);
-      setErrorMsg("");
-    } catch (error) {
-      setErrorMsg(error.message);
-    }
-  };
   // Convert messages in state to message JSX elements to render
   const messageListItems = messages.map((message, index) => (
     <li
@@ -136,14 +123,18 @@ export default function App() {
       <div className="buttons">
         {/* like button that toggles */}
         {liked[index] ? (
-          <button onClick={() => likeUnlike(message, index)}>
+          <button
+            disabled={!isLoggedIn}
+            onClick={() => likeUnlike(message, index)}>
             {message.val.likeCount}
             <iconify-icon
               icon="fa6-solid:heart"
               style={{ color: "red" }}></iconify-icon>
           </button>
         ) : (
-          <button onClick={() => likeUnlike(message, index)}>
+          <button
+            disabled={!isLoggedIn}
+            onClick={() => likeUnlike(message, index)}>
             {message.val.likeCount}
             <iconify-icon
               icon="fa6-regular:heart"
@@ -154,14 +145,18 @@ export default function App() {
         {/* edit button that also submits edit value, other edit buttons are disabled while editing */}
         <button
           disabled={
-            isEditing.some((bool) => bool === true)
+            (isEditing.some((bool) => bool === true)
               ? !isEditing[index]
-              : isEditing[index]
+              : isEditing[index]) || message.val.poster !== uid
           }
           onClick={() => editData(message, index)}>
           Edit
         </button>
-        <button onClick={() => deleteData(message)}>Delete</button>
+        <button
+          disabled={message.val.poster !== uid}
+          onClick={() => deleteData(message)}>
+          Delete
+        </button>
       </div>
       {/* display image if it exist */}
       <div>
@@ -187,6 +182,20 @@ export default function App() {
     </li>
   ));
 
+  const signUp = async () => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        emailValue,
+        passwordValue
+      );
+      console.log(userCredential);
+      setErrorMsg("");
+    } catch (error) {
+      setErrorMsg(error.message);
+    }
+  };
+
   const logIn = async () => {
     try {
       const userCredential = await signInWithEmailAndPassword(
@@ -209,6 +218,7 @@ export default function App() {
       await signOut(auth);
       setErrorMsg("");
       setIsLoggedIn(!isLoggedIn);
+      setUid("");
     } catch (error) {
       setErrorMsg(error.message);
     }
@@ -252,16 +262,17 @@ export default function App() {
           </>
         )}
       </div>
-
+      {isLoggedIn && (
+        <Composer
+          uid={uid}
+          database={database}
+          databaseRef={databaseRef}
+          storage={storage}
+          storageRef={storageRef}
+        />
+      )}
       <div className="card">
         {/* TODO: Add input field and add text input as messages in Firebase */}
-        {isLoggedIn && (
-          <Composer
-            uid={uid}
-            databaseRef={databaseRef}
-            storageRef={storageRef}
-          />
-        )}
         <ul
           className="message-box"
           style={{ borderBottom: "1px dotted white" }}>
