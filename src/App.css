@@ -35,9 +35,9 @@
 
 .card {
   padding: 2em;
-  form * {
-    margin: 0em 0.5em 0em 0em;
-  }
+  width: 50vw;
+  height: 30vw;
+  overflow: auto;
 }
 
 .message-box {

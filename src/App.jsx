@@ -4,39 +4,29 @@ import {
   onChildAdded,
   onChildChanged,
   onChildRemoved,
-  push,
   ref as databaseRef,
-  set,
   remove,
   update,
 } from "firebase/database";
-import {
-  deleteObject,
-  getDownloadURL,
-  ref as storageRef,
-  uploadBytes,
-} from "firebase/storage";
+import { deleteObject, ref as storageRef } from "firebase/storage";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { database, storage, auth } from "./firebase";
 import { useState, useEffect } from "react";
+import { database, storage, auth } from "./firebase";
+import Composer from "./Composer";
 
 // Save the Firebase message folder name as a constant to avoid bugs due to misspelling
 const DB_MESSAGES_KEY = "messages";
 const DB_IMAGES_KEY = "images";
 
 export default function App() {
-  //capture message
   const [messages, setMessages] = useState([]);
-  const [inputValue, setInputValue] = useState("");
   //capture edit
   const [isEditing, setIsEditing] = useState([]);
   const [editValue, setEditValue] = useState("");
-  //capture file
-  const [file, setFile] = useState(null);
   //capture likes
   const [liked, setLiked] = useState([]);
   //check login status
@@ -75,34 +65,20 @@ export default function App() {
     setLiked(messages.map((message) => !!message.val.like[uid]));
   }, [messages.length, isLoggedIn]); // eslint-disable-line
 
-  const writeData = async () => {
-    let name = "";
-    let url = "";
-    if (file) {
-      const newStorageRef = storageRef(
-        storage,
-        DB_IMAGES_KEY + "/" + file.name
-      );
-      await uploadBytes(newStorageRef, file);
-      url = await getDownloadURL(newStorageRef);
-      name = file.name;
+  const likeUnlike = (data, index) => {
+    if (liked[index]) {
+      setLiked((prev) => prev.with(index, !prev[index]));
+      update(databaseRef(database, DB_MESSAGES_KEY + "/" + data.key), {
+        likeCount: data.val.likeCount - 1,
+        like: { ...data.val.like, [uid]: false },
+      });
+    } else {
+      setLiked((prev) => prev.with(index, !prev[index]));
+      update(databaseRef(database, DB_MESSAGES_KEY + "/" + data.key), {
+        likeCount: data.val.likeCount + 1,
+        like: { ...data.val.like, [uid]: true },
+      });
     }
-    set(push(messagesRef), {
-      timestamp: `${new Date()}`,
-      edited: "",
-      message: inputValue,
-      fileName: name,
-      fileUrl: url,
-      likeCount: 0,
-      like: { [uid]: false },
-    });
-    setInputValue("");
-    setFile(null);
-  };
-
-  const deleteAll = async () => {
-    // await deleteObject(storageRef(storage, DB_IMAGES_KEY + "/"));
-    remove(messagesRef);
   };
 
   const editData = (data, index) => {
@@ -126,22 +102,6 @@ export default function App() {
     remove(databaseRef(database, DB_MESSAGES_KEY + "/" + data.key));
   };
 
-  const likeUnlike = (data, index) => {
-    if (liked[index]) {
-      setLiked((prev) => prev.with(index, !prev[index]));
-      update(databaseRef(database, DB_MESSAGES_KEY + "/" + data.key), {
-        likeCount: data.val.likeCount - 1,
-        like: { ...data.val.like, [uid]: false },
-      });
-    } else {
-      setLiked((prev) => prev.with(index, !prev[index]));
-      update(databaseRef(database, DB_MESSAGES_KEY + "/" + data.key), {
-        likeCount: data.val.likeCount + 1,
-        like: { ...data.val.like, [uid]: true },
-      });
-    }
-  };
-
   const signUp = async () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -155,34 +115,6 @@ export default function App() {
       setErrorMsg(error.message);
     }
   };
-
-  const logIn = async () => {
-    try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        emailValue,
-        passwordValue
-      );
-      console.log(userCredential);
-      setErrorMsg("");
-      setEmail(auth.currentUser.email);
-      setUid(auth.currentUser.uid);
-      setIsLoggedIn(!isLoggedIn);
-    } catch (error) {
-      setErrorMsg(error.message);
-    }
-  };
-
-  const logOut = async () => {
-    try {
-      await signOut(auth);
-      setErrorMsg("");
-      setIsLoggedIn(!isLoggedIn);
-    } catch (error) {
-      setErrorMsg(error.message);
-    }
-  };
-
   // Convert messages in state to message JSX elements to render
   const messageListItems = messages.map((message, index) => (
     <li
@@ -255,6 +187,33 @@ export default function App() {
     </li>
   ));
 
+  const logIn = async () => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        emailValue,
+        passwordValue
+      );
+      console.log(userCredential);
+      setErrorMsg("");
+      setEmail(auth.currentUser.email);
+      setUid(auth.currentUser.uid);
+      setIsLoggedIn(!isLoggedIn);
+    } catch (error) {
+      setErrorMsg(error.message);
+    }
+  };
+
+  const logOut = async () => {
+    try {
+      await signOut(auth);
+      setErrorMsg("");
+      setIsLoggedIn(!isLoggedIn);
+    } catch (error) {
+      setErrorMsg(error.message);
+    }
+  };
+
   return (
     <>
       <div>
@@ -293,32 +252,22 @@ export default function App() {
           </>
         )}
       </div>
-      {!!isLoggedIn && (
-        <div className="card">
-          {/* TODO: Add input field and add text input as messages in Firebase */}
-          <form onSubmit={(e) => e.preventDefault()}>
-            <input
-              style={{ width: "14.6em", marginRight: "1.4em" }}
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-            />
-            <button disabled={!inputValue} onClick={writeData}>
-              Send
-            </button>
-            <button disabled={messages.length === 0} onClick={deleteAll}>
-              NUKE
-            </button>
-            <br />
-            <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-          </form>
-          <ul
-            className="message-box"
-            style={{ borderBottom: "1px dotted white" }}>
-            {messageListItems}
-          </ul>
-        </div>
-      )}
+
+      <div className="card">
+        {/* TODO: Add input field and add text input as messages in Firebase */}
+        {isLoggedIn && (
+          <Composer
+            uid={uid}
+            databaseRef={databaseRef}
+            storageRef={storageRef}
+          />
+        )}
+        <ul
+          className="message-box"
+          style={{ borderBottom: "1px dotted white" }}>
+          {messageListItems}
+        </ul>
+      </div>
     </>
   );
 }
