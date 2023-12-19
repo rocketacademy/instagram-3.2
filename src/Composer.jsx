@@ -1,17 +1,16 @@
 import { useState } from "react";
-import { push, set } from "firebase/database";
-import { getDownloadURL, uploadBytes } from "firebase/storage";
+import { push, set, ref as databaseRef } from "firebase/database";
+import {
+  getDownloadURL,
+  uploadBytes,
+  ref as storageRef,
+} from "firebase/storage";
+import { database, storage } from "./firebase";
 
 const DB_MESSAGES_KEY = "messages";
 const DB_IMAGES_KEY = "images";
 
-export default function Composer({
-  uid,
-  database,
-  databaseRef,
-  storage,
-  storageRef,
-}) {
+export default function Composer({ uid }) {
   const [inputValue, setInputValue] = useState("");
   const [file, setFile] = useState(null);
 
