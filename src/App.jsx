@@ -72,8 +72,8 @@ export default function App() {
   useEffect(() => {
     //amount of "false" in array to be same as messages.length
     setIsEditing([...Array(messages.length)].fill(false));
-    setLiked(messages.map((message) => !!message?.val?.like?.[uid]));
-  }, [messages.length, isLoggedIn]);
+    setLiked(messages.map((message) => !!message.val.like[uid]));
+  }, [messages.length, isLoggedIn]); // eslint-disable-line
 
   const writeData = async () => {
     let name = "";
@@ -184,78 +184,76 @@ export default function App() {
   };
 
   // Convert messages in state to message JSX elements to render
-  const messageListItems = messages.map((message, index) => {
-    return (
-      <li
-        key={message.key}
-        style={{
-          borderTop: "1px dotted white",
-        }}>
-        {/* input if editing, else just show message */}
-        {isEditing[index] ? (
-          <input
-            style={{ width: "12.5em", marginRight: "2.3em" }}
-            type="text"
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-          />
-        ) : (
-          <div className="text-messages">{message.val.message}</div>
-        )}
-        <div className="buttons">
-          {/* like button that toggles */}
-          {liked[index] ? (
-            <button onClick={() => likeUnlike(message, index)}>
-              {message.val.likeCount}
-              <iconify-icon
-                icon="fa6-solid:heart"
-                style={{ color: "red" }}></iconify-icon>
-            </button>
-          ) : (
-            <button onClick={() => likeUnlike(message, index)}>
-              {message.val.likeCount}
-              <iconify-icon
-                icon="fa6-regular:heart"
-                style={{ color: "red" }}></iconify-icon>
-            </button>
-          )}
-
-          {/* edit button that also submits edit value, other edit buttons are disabled while editing */}
-          <button
-            disabled={
-              isEditing.some((bool) => bool === true)
-                ? !isEditing[index]
-                : isEditing[index]
-            }
-            onClick={() => editData(message, index)}>
-            Edit
+  const messageListItems = messages.map((message, index) => (
+    <li
+      key={message.key}
+      style={{
+        borderTop: "1px dotted white",
+      }}>
+      {/* input if editing, else just show message */}
+      {isEditing[index] ? (
+        <input
+          style={{ width: "12.5em", marginRight: "2.3em" }}
+          type="text"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+        />
+      ) : (
+        <div className="text-messages">{message.val.message}</div>
+      )}
+      <div className="buttons">
+        {/* like button that toggles */}
+        {liked[index] ? (
+          <button onClick={() => likeUnlike(message, index)}>
+            {message.val.likeCount}
+            <iconify-icon
+              icon="fa6-solid:heart"
+              style={{ color: "red" }}></iconify-icon>
           </button>
-          <button onClick={() => deleteData(message)}>Delete</button>
-        </div>
-        {/* display image if it exist */}
-        <div>
-          {!!message?.val?.fileUrl && (
-            <img
-              src={message.val.fileUrl}
-              alt="image"
-              style={{ maxWidth: "150px", maxHeight: "150px" }}
-            />
-          )}
-        </div>
-        <div className="info">
-          <span style={{ paddingRight: "1.325em" }}>Sent: </span>
-          {new Date(message.val.timestamp).toLocaleString()}
-          {!!message?.val?.edited && (
-            <>
-              <br />
-              <span>Edited: </span>
-              {new Date(message.val.edited).toLocaleString()}
-            </>
-          )}
-        </div>
-      </li>
-    );
-  });
+        ) : (
+          <button onClick={() => likeUnlike(message, index)}>
+            {message.val.likeCount}
+            <iconify-icon
+              icon="fa6-regular:heart"
+              style={{ color: "red" }}></iconify-icon>
+          </button>
+        )}
+
+        {/* edit button that also submits edit value, other edit buttons are disabled while editing */}
+        <button
+          disabled={
+            isEditing.some((bool) => bool === true)
+              ? !isEditing[index]
+              : isEditing[index]
+          }
+          onClick={() => editData(message, index)}>
+          Edit
+        </button>
+        <button onClick={() => deleteData(message)}>Delete</button>
+      </div>
+      {/* display image if it exist */}
+      <div>
+        {!!message?.val?.fileUrl && (
+          <img
+            src={message.val.fileUrl}
+            alt="image"
+            style={{ maxWidth: "150px", maxHeight: "150px" }}
+          />
+        )}
+      </div>
+      <div className="info">
+        <span style={{ paddingRight: "1.325em" }}>Sent: </span>
+        {new Date(message.val.timestamp).toLocaleString()}
+        {!!message?.val?.edited && (
+          <>
+            <br />
+            <span>Edited: </span>
+            {new Date(message.val.edited).toLocaleString()}
+          </>
+        )}
+      </div>
+    </li>
+  ));
 
   return (
     <>
