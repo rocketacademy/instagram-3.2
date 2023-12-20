@@ -57,7 +57,10 @@ export default function Texts(props) {
       setMessages((prev) => prev.filter((item) => item.key !== data.key));
     });
     console.log(document.querySelector(".messages-container").scrollHeight);
-    console.log(user);
+    console.log("user: ", user);
+    console.log("providerId: ", user.providerId);
+    console.log(messages)
+		console.log(auth)
   }, []);
 
   //for edit

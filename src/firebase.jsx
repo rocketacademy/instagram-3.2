@@ -5,15 +5,14 @@ import {getStorage} from 'firebase/storage'
 import {getAuth} from 'firebase/auth'
 
 const firebaseConfig = {
-  apiKey: "AIzaSyChcRoRP3NiiCEeU3sMPgpK5Mkwt6_lh2U",
-  authDomain: "rocketgram-1c4e9.firebaseapp.com",
-  databaseURL:
-    "https://rocketgram-1c4e9-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: import.meta.env.REACT_APP_PROJECT_ID,
-  storageBucket: "rocketgram-1c4e9.appspot.com",
-  messagingSenderId: import.meta.env.REACT_APP_MESSAGING_SENDER_ID,
-  appId: import.meta.env.REACT_APP_APP_ID,
-  measurementId: import.meta.env.REACT_APP_MEASUREMENT_ID,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  databaseURL: import.meta.env.VITE_FIREBASE_DB_URL,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase

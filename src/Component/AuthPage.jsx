@@ -13,7 +13,8 @@ export default function AuthPage(props){
   } = props
 
   useEffect(()=>{
-    console.log(auth)
+    console.log('user: ', user)
+    console.log("display name: ", user.displayName)
   },[])
 
   const [email, setEmail] = useState("")
