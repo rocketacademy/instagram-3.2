@@ -1,34 +1,17 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   createUserWithEmailAndPassword,
-  onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
 import { auth } from "./firebase";
 
-export default function AuthForm({
-  isLoggedIn,
-  setIsLoggedIn,
-  email,
-  setEmail,
-  setUid,
-}) {
+export default function AuthForm({ isLoggedIn, email, setEmail, setUid }) {
   //Login
   const [emailValue, setEmailValue] = useState("");
   const [passwordValue, setPasswordValue] = useState("");
   //error
   const [errorMsg, setErrorMsg] = useState("");
-
-  useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setIsLoggedIn(true);
-        setEmail(auth.currentUser.email);
-        setUid(auth.currentUser.uid);
-      } else setIsLoggedIn(false);
-    });
-  }, []); // eslint-disable-line
 
   const signUp = async () => {
     try {
@@ -63,6 +46,7 @@ export default function AuthForm({
       await signOut(auth);
       setErrorMsg("");
       setUid("");
+      setEmail("");
     } catch (error) {
       setErrorMsg(error.message);
     }

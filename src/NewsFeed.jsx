@@ -8,6 +8,7 @@ import {
   update,
 } from "firebase/database";
 import { deleteObject, ref as storageRef } from "firebase/storage";
+
 import { database, storage } from "./firebase";
 
 const DB_MESSAGES_KEY = "messages";
