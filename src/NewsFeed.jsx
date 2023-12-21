@@ -147,6 +147,7 @@ export default function NewsFeed({ isLoggedIn, uid }) {
           )}
         </div>
         <div className="info">
+          <p>Author: {message.val.posterEmail}</p>
           <span style={{ paddingRight: "1.325em" }}>Sent: </span>
           {new Date(message.val.timestamp).toLocaleString()}
           {!!message?.val?.edited && (

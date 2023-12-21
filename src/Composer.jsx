@@ -10,7 +10,7 @@ import { database, storage } from "./firebase";
 const DB_MESSAGES_KEY = "messages";
 const DB_IMAGES_KEY = "images";
 
-export default function Composer({ uid }) {
+export default function Composer({ uid, email }) {
   const [inputValue, setInputValue] = useState("");
   const [file, setFile] = useState(null);
 
@@ -36,6 +36,7 @@ export default function Composer({ uid }) {
       fileUrl: url,
       likeCount: 0,
       poster: uid,
+      posterEmail: email,
       like: { [uid]: false },
     });
     setInputValue("");
@@ -45,6 +46,7 @@ export default function Composer({ uid }) {
   return (
     <form onSubmit={(e) => (e.preventDefault(), e.target.reset())}>
       <input
+        name="message-input"
         style={{ width: "14.6em", marginRight: "1.4em" }}
         type="text"
         value={inputValue}
