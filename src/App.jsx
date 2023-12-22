@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createHashRouter, RouterProvider } from "react-router-dom";
 import Composer from "./Composer";
 import NewsFeed from "./NewsFeed";
 import AuthForm from "./AuthForm";
@@ -26,9 +26,9 @@ export default function App() {
     });
   }, []); // eslint-disable-line
 
-  const router = createBrowserRouter([
+  const router = createHashRouter([
     {
-      path: "/instagram-3.2/",
+      path: "/",
       element: (
         <>
           <NavBar />
@@ -42,7 +42,7 @@ export default function App() {
       ),
     },
     {
-      path: "/instagram-3.2/NewsFeed",
+      path: "/NewsFeed",
       element: (
         <>
           <NavBar />
