@@ -1,4 +1,3 @@
-import logo from "/logo.png";
 import "./App.css";
 import {
   onChildAdded,
@@ -19,6 +18,14 @@ import MessageList from "./MessageList.jsx";
 import AuthForm from "./AuthForm.jsx";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "./firebase";
+import MessageInput from "./MessageInput.jsx";
+import Navbar from "./NavBar.jsx";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+} from "react-router-dom";
+import Authentication from "./Authentication.jsx";
 
 // Save the Firebase message folder name as a constant to avoid bugs due to misspelling
 const DB_MESSAGES_KEY = "messages";
@@ -33,19 +40,25 @@ function App() {
   const [userInputFile, setUserInputFile] = useState([]);
   const [fileInputValue, setFileInputValue] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+
+  const handleUserSignIn = (email) => {
+    setUserEmail(email);
+  };
 
   // Authentication
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
-      console.log(user);
       if (user) {
-        setIsLoggedIn(user);
+        setIsLoggedIn(user); // Consider if this should be set to 'true'
+        setUserEmail(user.email); // Set userEmail upon authentication
+        console.log("user logged in.");
         return;
       }
-      // Else set logged-in user in state to null
-      setIsLoggedIn(null);
+      setIsLoggedIn(null); // Set isLoggedIn when user is not authenticated
+      setUserEmail(null); // Clear userEmail when user is not authenticated
     });
-  });
+  }, []);
 
   const handleSignOut = () => {
     auth.signOut().then(() => {
@@ -157,46 +170,72 @@ function App() {
       });
   };
 
-  return (
-    <>
-      <div>
-        <img src={logo} className="logo" alt="Rocket logo" />
-      </div>
-      <h1>Instagram Bootcamp</h1>
+  //router
 
-      {/* hide login portions when signed in */}
-      {isLoggedIn ? (
-        <button onClick={handleSignOut}>Sign Out</button>
-      ) : (
-        <AuthForm />
-      )}
-      {/* show data only when signed in */}
-      {isLoggedIn ? (
-        <div className="card">
-          {/* TODO: Add input field and add text input as messages in Firebase */}
-          <form onSubmit={writeData}>
-            Message:
-            <input type="text" value={userInput} onChange={handleInputChange} />
-            <br />
-            <br />
-            Upload image:
-            <input type="file" value={fileInputValue} onChange={handleImages} />
-            <br />
-            <br />
-            <button type="submit">Submit</button>
-          </form>
-        </div>
-      ) : null}
+  const RequireAuth = ({ userEmail }) => {
+    useEffect(() => {
+      console.log("Authenticate User Email:", userEmail);
+    }, [userEmail]);
+
+    const isAuthenticated = userEmail ? true : false;
+    return isAuthenticated && isLoggedIn ? (
       <div>
-        {isLoggedIn && (
-          <MessageList
-            messages={messages}
-            editMessage={editMessage}
-            removeMessage={removeMessage}
-          />
-        )}
+        <Authentication
+          isLoggedIn={isLoggedIn}
+          handleSignOut={handleSignOut}
+          setIsLoggedIn={setIsLoggedIn}
+        />
+        <MessageInput
+          writeData={writeData}
+          handleInputChange={handleInputChange}
+          handleImages={handleImages}
+          userInput={userInput}
+          fileInputValue={fileInputValue}
+        />
+        <MessageList
+          messages={messages}
+          editMessage={editMessage}
+          removeMessage={removeMessage}
+          isLoggedIn={isLoggedIn}
+        />
       </div>
-    </>
+    ) : (
+      <div>
+        {/* <Navbar /> */}
+        <Authentication
+          isLoggedIn={isLoggedIn}
+          // handleSignOut={handleSignOut}
+          setIsLoggedIn={setIsLoggedIn}
+        />
+      </div>
+    );
+  };
+
+  const router = createBrowserRouter([
+    {
+      path: "/",
+      element: (
+        <div>
+          <Navbar />
+          <AuthForm onUserSignIn={handleUserSignIn} />
+        </div>
+      ),
+    },
+    {
+      path: "/newsfeed",
+      element: (
+        <div>
+          <Navbar />
+          <RequireAuth isLoggedIn={isLoggedIn} userEmail={userEmail} />
+        </div>
+      ),
+    },
+  ]);
+
+  return (
+    <RouterProvider router={router}>
+      <router />
+    </RouterProvider>
   );
 }
 

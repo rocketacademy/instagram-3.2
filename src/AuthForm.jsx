@@ -6,7 +6,7 @@ import {
 } from "firebase/auth";
 import { useState } from "react";
 
-export default function AuthForm() {
+export default function AuthForm({ onUserSignIn }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -25,6 +25,7 @@ export default function AuthForm() {
     signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
       const user = userCredential.user;
       console.log("signed in", user);
+      onUserSignIn(user.email);
     });
   };
 
