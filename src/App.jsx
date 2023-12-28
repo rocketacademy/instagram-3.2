@@ -16,15 +16,11 @@ import { database, storage } from "./firebase.jsx";
 import { useState, useEffect } from "react";
 import MessageList from "./MessageList.jsx";
 import AuthForm from "./AuthForm.jsx";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
 import MessageInput from "./MessageInput.jsx";
 import Navbar from "./NavBar.jsx";
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Navigate,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Authentication from "./Authentication.jsx";
 
 // Save the Firebase message folder name as a constant to avoid bugs due to misspelling
@@ -201,12 +197,7 @@ function App() {
       </div>
     ) : (
       <div>
-        {/* <Navbar /> */}
-        <Authentication
-          isLoggedIn={isLoggedIn}
-          // handleSignOut={handleSignOut}
-          setIsLoggedIn={setIsLoggedIn}
-        />
+        <Authentication isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
       </div>
     );
   };
