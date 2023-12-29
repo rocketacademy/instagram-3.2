@@ -35,13 +35,13 @@ export default function NewsFeed({ isLoggedIn, uid }) {
         )
       )
     );
-  }, []); // eslint-disable-line
+  }, []);
 
   useEffect(() => {
     //amount of "false" in array to be same as messages.length
     setIsEditing([...Array(messages.length)].fill(false));
     setLiked(messages.map((message) => !!message.val.like[uid]));
-  }, [messages.length, isLoggedIn]); // eslint-disable-line
+  }, [messages, uid]);
 
   const likeUnlike = (data, index) => {
     if (liked[index]) {

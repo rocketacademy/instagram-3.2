@@ -24,7 +24,7 @@ export default function App() {
         setUid(auth.currentUser.uid);
       } else setIsLoggedIn(false);
     });
-  }, []); // eslint-disable-line
+  }, []);
 
   const router = createHashRouter([
     {
