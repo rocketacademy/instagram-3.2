@@ -6,6 +6,7 @@ import {
   ref as databaseRef,
   remove,
   update,
+  off,
 } from "firebase/database";
 import { deleteObject, ref as storageRef } from "firebase/storage";
 
@@ -35,6 +36,7 @@ export default function NewsFeed({ isLoggedIn, uid }) {
         )
       )
     );
+    return () => off(messagesRef);
   }, []);
 
   useEffect(() => {
