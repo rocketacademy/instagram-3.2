@@ -1,22 +1,30 @@
 import logo from "/logo.png";
 import "./App.css";
-import { onChildAdded, push, ref as databaseRef, set } from "firebase/database";
+import {
+  onChildAdded,
+  push,
+  ref as databaseRef,
+  set,
+  onChildChanged,
+} from "firebase/database";
+
 import {
   ref as storageRef,
   uploadBytes,
   getDownloadURL,
 } from "firebase/storage";
-//storageref will allow us to grab a particular location inside the filesystem in firebase
-//uploadBytes will allow us to take a file and put it online
+
+//React components
+import Composer from "./Components/Composer";
+import Newsfeed from "./Components/Newsfeed";
 
 import { database, storage } from "./firebase";
 
-import LoginSignup from "./LoginSignup";
+import LoginSignup from "./Components/LoginSignup";
 
 import { useState, useEffect } from "react";
 import FirebaseDisplay from "./FirebaseDisplay";
-//console.log(firebaseConfig);
-// Save the Firebase message folder name as a constant to avoid bugs due to misspelling
+
 const DB_MESSAGES_KEY = "messages";
 const DB_STORAGE_KEY = "images";
 //-> names of the location that we will eventually store the file/message in, in our database/storage
@@ -32,34 +40,61 @@ function App() {
 
   //States for firebase auth.
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  //isLoggedIn lets us check if the user is logged in or not
+
+  const [like_count, setLikeCount] = useState(0);
+
   const [user, setUser] = useState({});
-  //have a user object -> lets us customise pages to different people?
 
   useEffect(() => {
     const messagesRef = databaseRef(database, DB_MESSAGES_KEY);
-    // onChildAdded will return data for every child at the reference and every subsequent new child
-    // onChildAdded is like an event listener and now that it's been called it will keep listening out for any children added to the specific database reference passed in
-    onChildAdded(messagesRef, (data) => {
-      console.log("data.val() : ", data.val());
-      console.log("data.key: ", data.key);
-      //ask babe to explain this tmr
-      const ifKeyExistsInArray = (element) => element.key === data.key;
-      //data is the data of the child that is added
-      // Add the subsequent child to local component state, initialising a new array to trigger re-render
-      setMessages(
-        (prevState) => {
-          if (prevState.some(ifKeyExistsInArray)) {
-            return prevState;
-          } else {
-            return [...prevState, { key: data.key, val: data.val() }];
-          }
-        }
-        // Store message key so we can use it as a key in our list items when rendering messages
 
-        //{ key: data.key, val: data.val()} -> extracting the data that we need from Firebase and using it to add to this array of messages.
-        //data.key represents the unique key of the Firebase child element
-      );
+    onChildAdded(messagesRef, (data) => {
+      //console.log("data.val() : ", data.val());
+      //console.log("data.key: ", data.key);
+
+      //HELP
+      const ifKeyExistsInArray = (element) => element.key === data.key;
+
+      setMessages((prevMessages) => {
+        if (prevMessages.some(ifKeyExistsInArray)) {
+          return prevMessages;
+        } else {
+          return [...prevMessages, { key: data.key, val: data.val() }];
+          //data.val() is used to retrieve the value associated with the node/reference in the database.
+        }
+      });
+    });
+
+    onChildChanged(messagesRef, (data) => {
+      //console.log("data: ", data);
+
+      //console.log("key of data being changed", data.key);
+
+      const ifKeyExistsInArray = (element) => element.key === data.key;
+
+      setMessages((prevMessages) => {
+        // Check if the message with the same key exists in the previous messages
+        const messageIndex = prevMessages.findIndex(
+          (message) => message.key === data.key
+          //Looking for an element in the array of prevMessages that matches the condition
+          //that we provided in the callback function (in other words, that message.key === data.key)
+        );
+
+        if (messageIndex !== -1) {
+          // If the message with the key already exists, update the like count
+          const updatedMessages = [...prevMessages];
+
+          //Take that specific message with the correct key and update it's val()
+          updatedMessages[messageIndex] = {
+            ...updatedMessages[messageIndex],
+            val: data.val(),
+          };
+          return updatedMessages;
+        } else {
+          // If the message with the key doesn't exist, add it to the messages
+          return [...prevMessages, { key: data.key, val: data.val() }];
+        }
+      });
     });
   }, []);
 
@@ -68,23 +103,14 @@ function App() {
     //Stops the default behavior of the form refreshing after submission.
     const messageListRef = databaseRef(database, DB_MESSAGES_KEY);
     const newMessageRef = push(messageListRef);
-    //set takes in a reference
+
     const storageRefInstance = storageRef(
       storage,
       DB_STORAGE_KEY + fileInputFile.name
     );
-    // the fileInputFile will have a name that is something like: sexy.jpg
-    // that, + the DB_STORAGE_KEY, will make something like "image/sexy.jpg"
 
-    uploadBytes(
-      //44 min video url : day17 zoom
-      storageRefInstance,
-      fileInputFile
-    ).then((v) => {
-      //callback function in the then will only run after the promise is resolved.
-      //if i don't pass a function in (and pass a function call,) it will just try to evaluate the entire thing immediately.
-      //which means that the code in the then will prematurely run
-      console.log(v);
+    uploadBytes(storageRefInstance, fileInputFile).then((v) => {
+      //console.log(v);
       getDownloadURL(storageRefInstance).then((url) => {
         const dateobject = new Date();
         var time_in_minutes = "";
@@ -111,25 +137,14 @@ function App() {
           date: current_date,
           textSent: messageUserInput,
           url: url,
+          user: user.email,
+          like_count: like_count,
         });
       });
     });
-
-    //Get the time of the message being sent:
-
-    //
     setMessageUserInput("");
     setFileInputValue("");
   };
-  // message.val.date
-  // Convert messages in state to message JSX elements to render
-  let messageListItems = messages.map((message) => (
-    <div className="message-box" key={message.key}>
-      <p>{message.val.textSent}</p>
-      <p>Time Sent: {message.val.date}</p>
-      <img src={message.val.url} />
-    </div>
-  ));
 
   return (
     <>
@@ -141,42 +156,29 @@ function App() {
       {/* Passing in the setUser function so we can update our user*/}
       <LoginSignup setUser={setUser} setIsLoggedIn={setIsLoggedIn} />
 
-      <div className="card">
-        {/* TODO: Add input field and add text input as messages in Firebase */}
-        <form>
-          <label htmlFor="message-input-box">Message: </label>
-          <input
-            id="message-input-box"
-            type="text"
-            value={messageUserInput}
-            onChange={(e) => setMessageUserInput(e.target.value)}
+      {isLoggedIn ? (
+        <>
+          <p>Thank you for logging in!</p>
+          <Composer
+            messageUserInput={messageUserInput}
+            setMessageUserInput={setMessageUserInput}
+            fileInputValue={fileInputValue}
+            setFileInputValue={setFileInputValue}
+            fileInputFile={fileInputFile}
+            setFileInputFile={setFileInputFile}
+            writeData={writeData}
           />
-          <br />
-          <label htmlFor="file-input-box">File Input: </label>
-          <input
-            id="file-input-box"
-            type="file"
-            value={fileInputValue}
-            onChange={(e) => {
-              setFileInputFile(e.target.files[0]);
-              console.log("e.target.value is: ", e.target.value);
-              setFileInputValue(e.target.value);
-              console.log("file input value is: ", fileInputValue);
-              console.log("file input file is : ", fileInputFile);
-            }}
-          />
-          <br />
-          <button onClick={writeData}>Send</button>
-        </form>
+        </>
+      ) : (
+        <p>Log in to make a post!</p>
+      )}
 
-        {isLoggedIn ? (
-          <FirebaseDisplay />
-        ) : (
-          <p>You can't see the secret text.</p>
-        )}
-
-        {messageListItems}
-      </div>
+      {
+        //console.log(user)
+      }
+      <FirebaseDisplay />
+      {isLoggedIn ? <p>Welcome {user.email}!</p> : <p>Welcome!</p>}
+      <Newsfeed messages={messages} DB_MESSAGES_KEY={DB_MESSAGES_KEY} />
     </>
   );
 }

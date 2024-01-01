@@ -1,10 +1,27 @@
 import { useState } from "react";
-import { auth } from "./firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 
 export default function LoginSignup(props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const signin = () => {
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        console.log(userCredential);
+        props.setIsLoggedIn(true);
+        props.setUser(userCredential.user);
+        setEmail("");
+        setPassword("");
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
   const signup = () => {
     createUserWithEmailAndPassword(auth, email, password)
@@ -12,6 +29,8 @@ export default function LoginSignup(props) {
         console.log(userCredential);
         props.setIsLoggedIn(true);
         props.setUser(userCredential.user);
+        setEmail("");
+        setPassword("");
       })
       .catch((error) => {
         console.log(error);
@@ -39,6 +58,7 @@ export default function LoginSignup(props) {
       />
       <br />
       <button onClick={signup}> Sign Up</button>
+      <button onClick={signin}> Sign In</button>
     </div>
   );
 }
