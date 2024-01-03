@@ -5,20 +5,17 @@ import PostForm from "./Components/PostForm";
 import PostsDisplay from "./Components/PostsDisplay";
 import Navbar from "./Components/Navbar";
 import { useState, useEffect } from "react";
-import { signOut, onAuthStateChanged } from "firebase/auth";
+import { signOut } from "firebase/auth";
 import {
   onChildAdded,
   onChildChanged,
-  update,
-  push,
   ref,
-  set,
   remove,
   runTransaction,
   onChildRemoved,
 } from "firebase/database";
 import { database, auth } from "./firebase";
-import { createBrowserRouter, RouterProvider, Navigate, useNavigate } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 
 const DB_MESSAGES_KEY = "messages";
 
@@ -50,12 +47,12 @@ function App() {
     );
   }, []);
 
-  const handleSignOut = () => {
-    signOut(auth).then(() => {
-      setIsLoggedIn(false);
-      setUser({});
-    });
-  };
+    const handleSignOut = () => {
+      signOut(auth).then(() => {
+        setIsLoggedIn(false);
+        setUser({});
+      });
+    };
 
   const startUpdate = (message) => {
     setEditing(true);

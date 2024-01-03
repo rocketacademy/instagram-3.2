@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   ref as storageRef,
   uploadBytes,

@@ -55,7 +55,7 @@ function PostsDisplay({
                 src={message.val.url}
                 alt=""
                 width="200px"
-                height={"100px"}
+                height={"200px"}
               ></img>
             </td>
             <td style={tdStyle}>

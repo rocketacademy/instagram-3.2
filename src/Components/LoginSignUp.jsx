@@ -1,4 +1,3 @@
-import React from "react";
 import { useState } from "react";
 import { auth } from "../firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
@@ -51,8 +50,6 @@ function LoginSignUp({setUser, setIsLoggedIn, isLoggedIn}) {
         <button onClick={signUp}>Sign Up</button>
       </div>
       </>}
-      
-
     </div>
   );
 }
