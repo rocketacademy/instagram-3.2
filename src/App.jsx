@@ -1,51 +1,71 @@
+import { useState, useEffect } from "react";
+import { createHashRouter, RouterProvider } from "react-router-dom";
+import Composer from "./Composer";
+import NewsFeed from "./NewsFeed";
+import AuthForm from "./AuthForm";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "./firebase";
 import logo from "/logo.png";
 import "./App.css";
-import { onChildAdded, push, ref, set } from "firebase/database";
-import { database } from "./firebase";
-import { useState, useEffect } from "react";
+import NavBar from "./NavBar";
 
-// Save the Firebase message folder name as a constant to avoid bugs due to misspelling
-const DB_MESSAGES_KEY = "messages";
-
-function App() {
-  const [messages, setMessages] = useState([]);
+export default function App() {
+  //check login status
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  //user info
+  const [email, setEmail] = useState("");
+  const [uid, setUid] = useState("");
 
   useEffect(() => {
-    const messagesRef = ref(database, DB_MESSAGES_KEY);
-    // onChildAdded will return data for every child at the reference and every subsequent new child
-    onChildAdded(messagesRef, (data) => {
-      // Add the subsequent child to local component state, initialising a new array to trigger re-render
-      setMessages((prevState) =>
-        // Store message key so we can use it as a key in our list items when rendering messages
-        [...prevState, { key: data.key, val: data.val() }]
-      );
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsLoggedIn(true);
+        setEmail(auth.currentUser.email);
+        setUid(auth.currentUser.uid);
+      } else setIsLoggedIn(false);
     });
   }, []);
 
-  const writeData = () => {
-    const messageListRef = ref(database, DB_MESSAGES_KEY);
-    const newMessageRef = push(messageListRef);
-    set(newMessageRef, "abc");
-  };
-
-  // Convert messages in state to message JSX elements to render
-  let messageListItems = messages.map((message) => (
-    <li key={message.key}>{message.val}</li>
-  ));
+  const router = createHashRouter([
+    {
+      path: "/",
+      element: (
+        <>
+          <NavBar />
+          <AuthForm
+            isLoggedIn={isLoggedIn}
+            email={email}
+            setEmail={setEmail}
+            setUid={setUid}
+          />
+        </>
+      ),
+    },
+    {
+      path: "/NewsFeed",
+      element: (
+        <>
+          <NavBar />
+          {isLoggedIn && <Composer uid={uid} email={email} />}
+          <div className="card">
+            <ul
+              className="message-box"
+              style={{ borderBottom: "1px dotted white" }}>
+              <NewsFeed isLoggedIn={isLoggedIn} uid={uid} />
+            </ul>
+          </div>
+        </>
+      ),
+    },
+  ]);
 
   return (
     <>
       <div>
         <img src={logo} className="logo" alt="Rocket logo" />
       </div>
-      <h1>Instagram Bootcamp</h1>
-      <div className="card">
-        {/* TODO: Add input field and add text input as messages in Firebase */}
-        <button onClick={writeData}>Send</button>
-        <ol>{messageListItems}</ol>
-      </div>
+      <h1>Rocketgram</h1>
+      <RouterProvider router={router} />
     </>
   );
 }
-
-export default App;

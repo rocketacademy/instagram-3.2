@@ -35,4 +35,49 @@
 
 .card {
   padding: 2em;
+  width: 50vw;
+  height: 30vw;
+  overflow: auto;
+}
+
+.message-box {
+  text-align: left;
+  display: flex;
+  flex-direction: column-reverse;
+  li {
+    padding: 0.5em 0em 0.5em 0em;
+    * {
+      margin: 0.2em;
+    }
+  }
+}
+
+input {
+  font-size: 1.25em;
+}
+
+.text-messages {
+  font-size: 1.25em;
+  font-weight: 420;
+  width: 15em;
+  display: inline-flex;
+  text-wrap: balance;
+}
+
+.buttons {
+  font-size: 0.8125em;
+  display: inline-flex;
+}
+
+.info {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 300;
+  font-size: 0.5625em;
+  letter-spacing: 0.075em;
+  font-feature-settings: "cv18", "zero";
+}
+
+iconify-icon {
+  position: relative;
+  top: 0.35em;
 }
