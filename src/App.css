@@ -36,3 +36,15 @@
 .card {
   padding: 2em;
 }
+
+.left-align {
+  display: block;
+  text-align: left;
+  margin-bottom: 1rem;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-evenly;
+  margin-bottom: 1rem;
+}

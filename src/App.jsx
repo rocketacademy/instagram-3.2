@@ -1,37 +1,144 @@
 import logo from "/logo.png";
 import "./App.css";
-import { onChildAdded, push, ref, set } from "firebase/database";
-import { database } from "./firebase";
+import LoginSignUp from "./Components/LoginSignUp";
+import PostForm from "./Components/PostForm";
+import PostsDisplay from "./Components/PostsDisplay";
+import Navbar from "./Components/Navbar";
 import { useState, useEffect } from "react";
+import { signOut } from "firebase/auth";
+import {
+  onChildAdded,
+  onChildChanged,
+  ref,
+  remove,
+  runTransaction,
+  onChildRemoved,
+} from "firebase/database";
+import { database, auth } from "./firebase";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 
-// Save the Firebase message folder name as a constant to avoid bugs due to misspelling
 const DB_MESSAGES_KEY = "messages";
 
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState({});
   const [messages, setMessages] = useState([]);
+  const [editing, setEditing] = useState(false);
+  const [editingData, setEditingData] = useState({});
+  const [textInput, setTextInput] = useState("");
+  const [nameInput, setNameInput] = useState("");
+  const [currentURL, setCurrentURL] = useState("");
+
+  const messagesRef = ref(database, DB_MESSAGES_KEY);
 
   useEffect(() => {
-    const messagesRef = ref(database, DB_MESSAGES_KEY);
-    // onChildAdded will return data for every child at the reference and every subsequent new child
     onChildAdded(messagesRef, (data) => {
-      // Add the subsequent child to local component state, initialising a new array to trigger re-render
-      setMessages((prevState) =>
-        // Store message key so we can use it as a key in our list items when rendering messages
-        [...prevState, { key: data.key, val: data.val() }]
-      );
+      setMessages((prev) => [...prev, { key: data.key, val: data.val() }]);
     });
+    onChildRemoved(messagesRef, (data) => {
+      setMessages((prev) => prev.filter((item) => item.key !== data.key));
+    });
+    onChildChanged(messagesRef, (data) =>
+      setMessages((prev) =>
+        prev.map((item) =>
+          item.key === data.key ? { key: data.key, val: data.val() } : item
+        )
+      )
+    );
   }, []);
 
-  const writeData = () => {
-    const messageListRef = ref(database, DB_MESSAGES_KEY);
-    const newMessageRef = push(messageListRef);
-    set(newMessageRef, "abc");
+    const handleSignOut = () => {
+      signOut(auth).then(() => {
+        setIsLoggedIn(false);
+        setUser({});
+      });
+    };
+
+  const startUpdate = (message) => {
+    setEditing(true);
+    setTextInput(message.val.text);
+    setNameInput(message.val.name);
+    setCurrentURL(message.val.url);
+    setEditingData(message);
   };
 
-  // Convert messages in state to message JSX elements to render
-  let messageListItems = messages.map((message) => (
-    <li key={message.key}>{message.val}</li>
-  ));
+  const deleteMessage = (messageKey) => {
+    remove(ref(database, `${DB_MESSAGES_KEY}/${messageKey}`));
+  };
+
+  const addLike = (message) => {
+    const messageRef = ref(database, DB_MESSAGES_KEY + "/" + message.key);
+
+    runTransaction(messageRef, (currentData) => {
+      if (currentData) {
+        currentData.likes = (currentData.likes || 0) + 1;
+      }
+      return currentData;
+    });
+  };
+
+  const addDislikes = (message) => {
+    const messageRef = ref(database, DB_MESSAGES_KEY + "/" + message.key);
+
+    runTransaction(messageRef, (currentData) => {
+      if (currentData) {
+        currentData.dislikes = (currentData.dislikes || 0) + 1;
+      }
+      return currentData;
+    });
+  };
+
+  const RequireAuth = ({ children, redirectTo, user }) => {
+    const isAuthenticated = user.email ? true : false;
+    return isAuthenticated ? children : <Navigate to={redirectTo} />;
+  };
+  
+ const router = createBrowserRouter([
+   {
+     path: "/",
+     element: (
+       <div>
+         <Navbar isLoggedIn={isLoggedIn} handleSignOut={handleSignOut} />
+         <LoginSignUp setUser={setUser} setIsLoggedIn={setIsLoggedIn} isLoggedIn={isLoggedIn}/>
+       </div>
+     ),
+   },
+   {
+     path: "/posts",
+     element: (
+       <div>
+         <Navbar isLoggedIn={isLoggedIn} handleSignOut={handleSignOut} />
+         <PostsDisplay
+           messages={messages}
+           isLoggedIn={isLoggedIn}
+           startUpdate={startUpdate}
+           deleteMessage={deleteMessage}
+           addLike={addLike}
+           addDislikes={addDislikes}
+           user={user}
+         />
+       </div>
+     ),
+   },
+   {
+     path: "/form",
+     element: (
+       <>
+         <Navbar isLoggedIn={isLoggedIn} handleSignOut={handleSignOut} />
+         <RequireAuth redirectTo={"/"} user={user}>
+           <PostForm
+             isLoggedIn={isLoggedIn}
+             editing={editing}
+             setEditing={setEditing}
+             editingData={editingData}
+             setEditingData={setEditingData}
+             user={user}
+           />
+         </RequireAuth>
+       </>
+     ),
+   },
+ ]);
 
   return (
     <>
@@ -39,11 +146,7 @@ function App() {
         <img src={logo} className="logo" alt="Rocket logo" />
       </div>
       <h1>Instagram Bootcamp</h1>
-      <div className="card">
-        {/* TODO: Add input field and add text input as messages in Firebase */}
-        <button onClick={writeData}>Send</button>
-        <ol>{messageListItems}</ol>
-      </div>
+      <RouterProvider router={router} />
     </>
   );
 }
