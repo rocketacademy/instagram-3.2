@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 const DB_MESSAGES_KEY = "messages";
 
 function App() {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<any[]>([]);
 
   useEffect(() => {
     const messagesRef = ref(database, DB_MESSAGES_KEY);
@@ -38,11 +38,11 @@ function App() {
       <div>
         <img src={logo} className="logo" alt="Rocket logo" />
       </div>
-      <h1>Instagram Bootcamp</h1>
+      <h1>Instagram Bootcamp compile</h1>
       <div className="card">
         {/* TODO: Add input field and add text input as messages in Firebase */}
         <button onClick={writeData}>Send</button>
-        <ol>{messageListItems}</ol>
+        {/* <ol>{messageListItems}</ol> */}
       </div>
     </>
   );
