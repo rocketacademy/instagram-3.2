@@ -3,15 +3,12 @@ import { Button } from "./components/ui/button";
 
 export const SideBar = ({ toggleView }: any) => {
   // "post" or "view"
-  const [view, setView] = useState<string | null>(null);
-
-  useEffect(() => {
-    setView("post");
-  }, []);
+  const [sidebarState, setSidebarState] = useState<string | null>("post");
+  console.log(sidebarState);
   return (
     <div className="grid-start-1 grid-span-1 bg-red-200 p-5">
       <h1 className="text-3xl text-zinc-950">Menu</h1>
-      {view === "post" ? (
+      {sidebarState === "post" ? (
         <div className="flex flex-col gap-5 pt-10">
           <Button
             variant={"secondary"}
@@ -25,8 +22,8 @@ export const SideBar = ({ toggleView }: any) => {
             className="text-lg"
             size={"lg"}
             onClick={() => {
-              setView("view");
               toggleView("view");
+              setSidebarState("view");
             }}
           >
             View feed
@@ -39,8 +36,8 @@ export const SideBar = ({ toggleView }: any) => {
             className="text-lg"
             size={"lg"}
             onClick={() => {
-              setView("post");
               toggleView("post");
+              setSidebarState("post");
             }}
           >
             Make a Post
