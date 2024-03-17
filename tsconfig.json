@@ -4,6 +4,10 @@
   "_version": "3.0.0",
 
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "target": "ESNext",
     "types": ["vite/client"],
     "useDefineForClassFields": true,
