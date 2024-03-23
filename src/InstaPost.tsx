@@ -1,7 +1,4 @@
 import logo from "/logo.png";
-import { onChildAdded, push, ref, set } from "firebase/database";
-const DB_MESSAGES_KEY = "messages";
-import { database } from "./firebase";
 import { Button } from "./components/ui/button";
 import { useState, useEffect, useRef } from "react";
 import { uploadFile } from "./utils";
@@ -18,6 +15,7 @@ export const InstaPost = () => {
   const [file, setFile] = useState<any>("");
   const inputFile: any = useRef(null);
   const [sendBtnState, setSendBtnState] = useState<boolean>(true);
+  const [sendBtnVal, setSendBtnVal] = useState("Send");
 
   useEffect(() => {
     console.log("InstaPost");
@@ -71,14 +69,16 @@ export const InstaPost = () => {
             variant={"secondary"}
             onClick={() => {
               console.log("uploading");
+              setSendBtnVal("Loading...");
               uploadFile(file, post).then(() => {
                 console.log("resetting");
+                setSendBtnVal("Send");
                 setPost("");
                 resetFile();
               });
             }}
           >
-            Send
+            {sendBtnVal}
           </Button>
         </div>
       </div>

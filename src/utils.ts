@@ -19,16 +19,3 @@ export const uploadFile = async (
     console.log("uploaded");
   }
 };
-
-export const listAllFiles = async () => {
-  const storageRef = ref(storage, "posts");
-  try {
-    const result = await listAll(storageRef);
-    const posts = result.items.map((item) => {
-      item.name;
-    });
-    return posts;
-  } catch (err) {
-    console.log("Something wrong happened while listing files", err);
-  }
-};

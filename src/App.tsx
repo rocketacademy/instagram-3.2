@@ -1,14 +1,10 @@
-import logo from "/logo.png";
 import "./App.css";
-import { onChildAdded, push, ref, set } from "firebase/database";
-import { database } from "./firebase";
 import { useState, useEffect } from "react";
 import { Instafeed } from "./InstaFeed";
 import { InstaPost } from "./InstaPost";
 import { SideBar } from "./SideBar";
 
 // Save the Firebase message folder name as a constant to avoid bugs due to misspelling
-const DB_MESSAGES_KEY = "messages";
 
 function App() {
   useEffect(() => {
